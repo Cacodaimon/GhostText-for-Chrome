@@ -1,0 +1,4 @@
+GhostTextForChrome
+==================
+
+GhostText Chrome extension
