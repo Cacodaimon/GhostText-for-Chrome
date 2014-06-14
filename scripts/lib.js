@@ -22,7 +22,6 @@ var SublimeTextArea = {
     connectTextarea: function (textarea, title) {
         var textareaDom = $(textarea).get(0);
 
-        alert("DO Ajax");
         $.get("http://localhost:" + SublimeTextArea.serverPort(), function(data) {
             var port = data.WebSocketPort;
 
