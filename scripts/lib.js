@@ -13,47 +13,53 @@ var SublimeTextArea = {
 
     serverPort: function (port) {
         if (port == null) {
-            return localStorage.getItem('server-port') || 1337;
+            return localStorage.getItem('server-port') || 4001;
         }
 
         localStorage.setItem('server-port', port);
     },
 
     connectTextarea: function (textarea, title) {
-        var that = this;
         var textareaDom = $(textarea).get(0);
 
-        try {
-            var webSocket = new WebSocket('ws://localhost:' + SublimeTextArea.serverPort());    
-        } catch (e) {
-            that.errorHandler(e);
-            return;
-        }
+        alert("DO Ajax");
+        $.get("http://localhost:" + SublimeTextArea.serverPort(), function(data) {
+            var port = data.WebSocketPort;
 
-        webSocket.onopen = function () {
-            webSocket.send(that.textChange(title, textarea));
-        };
-        
-        webSocket.onerror = function (event) {
-            if (that.errorHandler(event)) {
-	            textarea.off('.sta');
-	            console.error('SublimeTexArea: detached from TextArea');
+            try {
+                var webSocket = new WebSocket('ws://localhost:' + port);
+            } catch (e) {
+                SublimeTextArea.errorHandler(e);
+                return;
             }
-        };
 
-        webSocket.onmessage = function (event) {
-            var response = JSON.parse(event.data);
-            textarea.val(response.text);
+            webSocket.onopen = function () {
+                webSocket.send(SublimeTextArea.textChange(title, textarea));
+            };
 
-            textareaDom.selectionStart = response.cursor.min;
-            textareaDom.selectionEnd = response.cursor.max;
-            textareaDom.focus();
-        };
+            webSocket.onerror = function (event) {
+                if (SublimeTextArea.errorHandler(event)) {
+                    textarea.off('.sta');
+                    console.error('SublimeTexArea: detached from TextArea');
+                }
+            };
 
-        textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
-            webSocket.send(that.textChange(title, textarea));
-        });
+            webSocket.onmessage = function (event) {
+                var response = JSON.parse(event.data);
+                textarea.val(response.text);
+
+                textareaDom.selectionStart = response.cursor.min;
+                textareaDom.selectionEnd = response.cursor.max;
+                textareaDom.focus();
+            };
+
+            textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
+                webSocket.send(SublimeTextArea.textChange(title, textarea));
+            });
+
+        }).fail(SublimeTextArea.errorHandler);
     },
+
     textChange: function (title, textarea) {
         var textareaDom = $(this).get(0);
 
@@ -66,9 +72,10 @@ var SublimeTextArea = {
                 },
             });
     },
+
     errorHandler: function (e) {
-        if(e && e.target && e.target.readyState === 3) {
-            alert('Connection error. Make sure that Sublime Text is open and has SublimeTextArea installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');   
+        if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
+            alert('Connection error. Make sure that Sublime Text is open and has SublimeTextArea installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
             return true;//the error was handled
         } else if(e.name && e.name === "SecurityError") {
             if(confirm('SublimeTextArea doesn\'t work on HTTPS pages in some versions of Chrome. Click OK to see how you can fix this.')){
