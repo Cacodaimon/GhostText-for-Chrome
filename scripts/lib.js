@@ -1,5 +1,22 @@
-var SublimeTextArea = {
+/**
+ * GhostText for Chrome lib.
+ *
+ * @licence The MIT License (MIT)
+ * @author Guido Krömer <mail 64 cacodaemon 46 de>
+ * @todo Remove debug output.
+ * @type {{openTab: Function, serverPort: Function, connectTextArea: Function, connectionHandler: Function, textChange: Function, errorHandler: Function}}
+ */
+var GhostText = {
+    /**
+     * Opens or activates a tab specified by it's url.
+     *
+     * @param {string} url The tab's URL.
+     * @static
+     */
     openTab: function (url) {
+        /**
+         * @type {string} The sanitized URL.
+         */
         var optionsUrl = chrome.extension.getURL(url);
 
         chrome.tabs.query({url: optionsUrl}, function(tabs) {
@@ -11,6 +28,13 @@ var SublimeTextArea = {
         });
     },
 
+    /**
+     * Gets or sets the GhostText server main port.
+     *
+     * @param {number} port The TCP port number.
+     * @returns {number} The TCP port number.
+     * @static
+     */
     serverPort: function (port) {
         if (port == null) {
             return localStorage.getItem('server-port') || 4001;
@@ -19,68 +43,159 @@ var SublimeTextArea = {
         localStorage.setItem('server-port', port);
     },
 
-    connectTextarea: function (textarea, title) {
-        var textareaDom = $(textarea).get(0);
+    /**
+     * Connects a textarea to a GhostText server by messaging through the background script..
+     *
+     * @param {jQuery} textarea The textarea to connect.
+     * @param {string} title The tabs title.
+     * @param {number} tabId The chrome tab id.
+     * @static
+     */
+    connectTextArea: function (textarea, title, tabId) {
+        console.log("connectTextarea");
+        /**
+         * @type {HTMLTextAreaElement}
+         */
+        var textAreaDom = $(textarea).get(0);
 
-        $.get("http://localhost:" + SublimeTextArea.serverPort(), function(data) {
-            var port = data.WebSocketPort;
+        /**
+         * @type {*}
+         * @see https://developer.chrome.com/extensions/runtime#type-Port
+         */
+        var port = chrome.runtime.connect({name: "GhostText"});
 
-            try {
-                var webSocket = new WebSocket('ws://localhost:' + port);
-            } catch (e) {
-                SublimeTextArea.errorHandler(e);
+        textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
+            console.log("CT");
+            port.postMessage({
+                change: GhostText.textChange(title, textarea),
+                tabId: tabId
+            });
+        });
+
+        port.onMessage.addListener(function(msg) {
+            console.log(msg);
+
+            if (msg.tabId != tabId) {
                 return;
             }
 
-            webSocket.onopen = function () {
-                webSocket.send(SublimeTextArea.textChange(title, textarea));
-            };
+            /**
+             * @type {{text: {string}, cursor: {min: {number}, max: {number}}}}
+             */
+            var response = JSON.parse(msg.change);
+            textarea.val(response.text);
 
-            webSocket.onerror = function (event) {
-                if (SublimeTextArea.errorHandler(event)) {
-                    textarea.off('.sta');
-                    console.error('SublimeTexArea: detached from TextArea');
-                }
-            };
-
-            webSocket.onmessage = function (event) {
-                var response = JSON.parse(event.data);
-                textarea.val(response.text);
-
-                textareaDom.selectionStart = response.cursor.min;
-                textareaDom.selectionEnd = response.cursor.max;
-                textareaDom.focus();
-            };
-
-            textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
-                webSocket.send(SublimeTextArea.textChange(title, textarea));
-            });
-
-        }).fail(SublimeTextArea.errorHandler);
+            textAreaDom.selectionStart = response.cursor.min;
+            textAreaDom.selectionEnd   = response.cursor.max;
+            textAreaDom.focus();
+        });
     },
 
+    /**
+     * Handles incoming connections from the content script.
+     * Has to be started in the background script.
+     * @todo Does not fit on my screen, refactor.
+     * @static
+     */
+    connectionHandler: function () {
+        console.log("connectionHandler");
+
+        /**
+         * Chrome tab id to WebSocket mapping.
+         * @type {Array<WebSocket>}
+         */
+        var connections = {};
+
+        chrome.runtime.onConnect.addListener(function(port) {
+            console.log("chrome.runtime.onConnect.addListener");
+            if (port.name != "GhostText") {
+                return;
+            }
+
+            port.onMessage.addListener(function(msg) {
+                console.log("port.onMessage.addListener");
+                /**
+                 * @type {string} The chrome tab id.
+                 */
+                var tabId = msg.tabId.toString();
+
+                if (connections[tabId]) {
+                    console.log(["connections[tabId].send(msg.change)", msg.change]);
+                    connections[tabId].send(msg.change);
+
+                    return;
+                }
+
+                $.get("http://localhost:" + GhostText.serverPort(), function(data) {
+                    console.log("$.get");
+                    /**
+                     * @type {number}
+                     */
+                    var webSocketPort = data.WebSocketPort;
+                    console.log(["Port ", port].join());
+
+                    try {
+                        connections[tabId] = new WebSocket('ws://localhost:' + webSocketPort);
+                    } catch (e) {
+                        GhostText.errorHandler(e);
+
+                        return;
+                    }
+
+                    connections[tabId].onopen = function (event) {
+                        console.log(event);
+                        connections[tabId].send(msg.change);
+                    };
+
+                    connections[tabId].onerror = function (event) {
+                        console.log(event);
+                        delete connections[tabId];
+
+                        GhostText.errorHandler(event);
+                    };
+
+                    connections[tabId].onmessage = function (event) {
+                        console.log(event);
+                        port.postMessage({
+                            tabId: tabId,
+                            change: event.data
+                        });
+                    };
+                });
+            });
+        });
+    },
+
+    /**
+     * Packs the title an the textarea's value and cursor into a change request the GhostText server understands.
+     *
+     * @param {jQuery} textarea
+     * @param {string} title
+     * @returns {string}
+     * @static
+     */
     textChange: function (title, textarea) {
-        var textareaDom = $(this).get(0);
+        var textAreaDom = $(this).get(0);
 
         return JSON.stringify({
                 title:  title,
                 text:   textarea.val(),
                 cursor: {
-                    start: textareaDom.selectionStart,
-                    end: textareaDom.selectionEnd
-                },
+                    start: textAreaDom.selectionStart,
+                    end: textAreaDom.selectionEnd
+                }
             });
     },
 
+    /**
+     * A general error handler.
+     *
+     * @param {Error} e
+     * @static
+     */
     errorHandler: function (e) {
         if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
-            alert('Connection error. Make sure that Sublime Text is open and has SublimeTextArea installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
-            return true;//the error was handled
-        } else if(e.name && e.name === "SecurityError") {
-            if(confirm('SublimeTextArea doesn\'t work on HTTPS pages in some versions of Chrome. Click OK to see how you can fix this.')){
-                window.open('https://github.com/Cacodaimon/SublimeTextArea/issues/5#issuecomment-44571987');
-            }
-            return true;//the error was handled
+            alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
         }
-    },
+    }
 };

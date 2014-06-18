@@ -13,7 +13,7 @@
         "run_at": "document_end"
   }],
   "background": {
-    "scripts": ["scripts/background.js"]
+    "page": "background.html"
   },
   "permissions": [
     "tabs","<all_urls>"

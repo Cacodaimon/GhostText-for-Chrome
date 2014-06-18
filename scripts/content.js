@@ -8,6 +8,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     $("textarea").focus(function () {
         var textArea = $(this);
         textArea.unbind("focus");
-        SublimeTextArea.connectTextarea($(this), $('title').text());
+        GhostText.connectTextArea($(this), $('title').text(), request.id);
     });
 });

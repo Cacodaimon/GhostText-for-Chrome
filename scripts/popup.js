@@ -1,10 +1,10 @@
 $(document).ready(function () {
     $('#btn-options').click(function () {
-        SublimeTextArea.openTab('options.html');
+        GhostText.openTab('options.html');
     });
 
     $('#btn-about').click(function () {
-        SublimeTextArea.openTab('about.html');
+        GhostText.openTab('about.html');
     });
 
     $('#btn-connect').click(function () {
@@ -13,7 +13,7 @@ $(document).ready(function () {
             currentWindow: true
         },
         function(tabs){
-            chrome.tabs.sendMessage(tabs[0].id, {textarea: 'connect'}, function(response) { });
+            chrome.tabs.sendMessage(tabs[0].id, {textarea: 'connect', id: tabs[0].id}, function(response) { });
         });
     });
 });

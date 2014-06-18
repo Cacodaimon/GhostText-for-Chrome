@@ -1,18 +1,28 @@
 $(document).ready(function () {
+    /**
+     * @type {jQuery}
+     */
     var serverPortInput = $('#server-port');
+
+    /**
+     * @type {jQuery}
+     */
     var optionsFormSaveBtn = $('#options-form-save-btn');
 
-    serverPortInput.val(SublimeTextArea.serverPort());
+    serverPortInput.val(GhostText.serverPort());
 
     $('#options-form').submit(function () {
+        /**
+         * @type {number}
+         */
         var serverPort = serverPortInput.val();
-        SublimeTextArea.serverPort(serverPort);
+        GhostText.serverPort(serverPort);
 
-        optionsFormSaveBtn.attr('disabled', true)
+        optionsFormSaveBtn.attr('disabled', true);
         return false;
     });
 
     serverPortInput.change(function () {
-        optionsFormSaveBtn.attr('disabled', false)
+        optionsFormSaveBtn.attr('disabled', false);
     });
 });
