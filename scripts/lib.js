@@ -3,20 +3,18 @@
  *
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
- * @todo Remove debug output.
- * @type {{openTab: Function, serverPort: Function, connectTextArea: Function, connectionHandler: Function, textChange: Function, errorHandler: Function}}
+ * @type {{openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, errorHandler: Function}}
  */
 var GhostText = {
     /**
      * Opens or activates a tab specified by it's url.
      *
      * @param {string} url The tab's URL.
+     * @public
      * @static
      */
-    openTab: function (url) {
-        /**
-         * @type {string} The sanitized URL.
-         */
+    openTab: function(url) {
+        /** @type {string} The sanitized URL. */
         var optionsUrl = chrome.extension.getURL(url);
 
         chrome.tabs.query({url: optionsUrl}, function(tabs) {
@@ -33,9 +31,10 @@ var GhostText = {
      *
      * @param {number} port The TCP port number.
      * @returns {number} The TCP port number.
+     * @public
      * @static
      */
-    serverPort: function (port) {
+    serverPort: function(port) {
         if (port == null) {
             return localStorage.getItem('server-port') || 4001;
         }
@@ -49,13 +48,11 @@ var GhostText = {
      * @param {jQuery} textarea The textarea to connect.
      * @param {string} title The tabs title.
      * @param {number} tabId The chrome tab id.
+     * @public
      * @static
      */
-    connectTextArea: function (textarea, title, tabId) {
-        console.log("connectTextarea");
-        /**
-         * @type {HTMLTextAreaElement}
-         */
+    connectTextArea: function(textarea, title, tabId) {
+        /** @type {HTMLTextAreaElement} */
         var textAreaDom = $(textarea).get(0);
 
         /**
@@ -65,7 +62,6 @@ var GhostText = {
         var port = chrome.runtime.connect({name: "GhostText"});
 
         textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
-            console.log("CT");
             port.postMessage({
                 change: GhostText.textChange(title, textarea),
                 tabId: tabId
@@ -73,8 +69,6 @@ var GhostText = {
         });
 
         port.onMessage.addListener(function(msg) {
-            console.log(msg);
-
             if (msg.tabId != tabId) {
                 return;
             }
@@ -89,81 +83,111 @@ var GhostText = {
             textAreaDom.selectionEnd   = response.cursor.max;
             textAreaDom.focus();
         });
+
+        port.postMessage({
+            change: GhostText.textChange(title, textarea),
+            tabId: tabId
+        });
     },
+
+    /**
+     * Chrome tab id to WebSocket mapping.
+     * @type {Array<WebSocket>}
+     * @private
+     * @static
+     */
+    connections: {},
 
     /**
      * Handles incoming connections from the content script.
      * Has to be started in the background script.
-     * @todo Does not fit on my screen, refactor.
+     * @public
      * @static
      */
-    connectionHandler: function () {
-        console.log("connectionHandler");
+    connectionHandler: function() {
+        chrome.runtime.onConnect.addListener(GhostText.connectionHandlerOnConnect);
 
-        /**
-         * Chrome tab id to WebSocket mapping.
-         * @type {Array<WebSocket>}
-         */
-        var connections = {};
+        chrome.tabs.onRemoved.addListener(GhostText.closeConnection);
+    },
 
-        chrome.runtime.onConnect.addListener(function(port) {
-            console.log("chrome.runtime.onConnect.addListener");
-            if (port.name != "GhostText") {
+    /**
+     * Handles incoming chrome messages, used by the connectionHandler.
+     *
+     * @param {*} port
+     * @see https://developer.chrome.com/extensions/runtime#type-Port
+     * @private
+     */
+    connectionHandlerOnConnect: function(port) {
+        if (port.name != "GhostText") {
+            return;
+        }
+
+        port.onMessage.addListener(function(msg) {
+            /** @type {string} The chrome tab id. */
+            var tabId = msg.tabId.toString();
+
+            if (GhostText.connections[tabId] && GhostText.connections[tabId].readyState == 1) { // 1 - connection established
+                GhostText.connections[tabId].send(msg.change);
+
                 return;
             }
 
-            port.onMessage.addListener(function(msg) {
-                console.log("port.onMessage.addListener");
-                /**
-                 * @type {string} The chrome tab id.
-                 */
-                var tabId = msg.tabId.toString();
+            $.get("http://localhost:" + GhostText.serverPort(), function(data) {
+                /** @type {number} */
+                var webSocketPort = data.WebSocketPort;
 
-                if (connections[tabId]) {
-                    console.log(["connections[tabId].send(msg.change)", msg.change]);
-                    connections[tabId].send(msg.change);
+                try {
+                    GhostText.connections[tabId] = new WebSocket('ws://localhost:' + webSocketPort);
+                } catch (e) {
+                    GhostText.errorHandler(e);
 
                     return;
                 }
 
-                $.get("http://localhost:" + GhostText.serverPort(), function(data) {
-                    console.log("$.get");
-                    /**
-                     * @type {number}
-                     */
-                    var webSocketPort = data.WebSocketPort;
-                    console.log(["Port ", port].join());
+                GhostText.connections[tabId].onopen = function () {
+                    GhostText.connections[tabId].send(msg.change);
+                };
 
-                    try {
-                        connections[tabId] = new WebSocket('ws://localhost:' + webSocketPort);
-                    } catch (e) {
-                        GhostText.errorHandler(e);
+                GhostText.connections[tabId].onclose = GhostText.connections[tabId].onerror = function (event) {
+                    GhostText.closeConnection(tabId);
+                    GhostText.errorHandler(event);
+                };
 
-                        return;
-                    }
-
-                    connections[tabId].onopen = function (event) {
-                        console.log(event);
-                        connections[tabId].send(msg.change);
-                    };
-
-                    connections[tabId].onerror = function (event) {
-                        console.log(event);
-                        delete connections[tabId];
-
-                        GhostText.errorHandler(event);
-                    };
-
-                    connections[tabId].onmessage = function (event) {
-                        console.log(event);
-                        port.postMessage({
-                            tabId: tabId,
-                            change: event.data
-                        });
-                    };
-                });
+                GhostText.connections[tabId].onmessage = function (event) {
+                    port.postMessage({
+                        tabId: tabId,
+                        change: event.data
+                    });
+                };
             });
         });
+    },
+
+    /**
+     * Closes a WebSocket connected to a tab.
+     *
+     * @param {number|string} tabId
+     * @returns {boolean}
+     * @private
+     * @static
+     */
+    closeConnection: function(tabId) {
+        tabId = tabId.toString();
+
+        if (!GhostText.connections[tabId]) {
+            return false;
+        }
+
+        if (GhostText.connections[tabId].readyState != 3) { // 3 - connection closed or could not open
+            try {
+                GhostText.connections[tabId].close();
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        delete GhostText.connections[tabId];
+
+        return true;
     },
 
     /**
@@ -172,9 +196,10 @@ var GhostText = {
      * @param {jQuery} textarea
      * @param {string} title
      * @returns {string}
+     * @private
      * @static
      */
-    textChange: function (title, textarea) {
+    textChange: function(title, textarea) {
         var textAreaDom = $(this).get(0);
 
         return JSON.stringify({
@@ -191,9 +216,10 @@ var GhostText = {
      * A general error handler.
      *
      * @param {Error} e
+     * @private
      * @static
      */
-    errorHandler: function (e) {
+    errorHandler: function(e) {
         if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
             alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
         }
