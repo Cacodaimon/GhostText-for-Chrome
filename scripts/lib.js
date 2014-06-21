@@ -3,7 +3,8 @@
  *
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
- * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, errorHandler: Function}}
+ *
+ * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, guessSyntax: Function, getMinMaxSelection: Function, errorHandler: Function, checkProtocolVersion: Function}}
  */
 var GhostText = {
     /**
@@ -49,17 +50,18 @@ var GhostText = {
     },
 
     /**
-     * Connects a textarea to a GhostText server by messaging through the background script..
+     * Connects a HTML textarea to a GhostText server by messaging through the background script..
      *
-     * @param {jQuery} textarea The textarea to connect.
+     * @param {jQuery} textArea The HTML textarea element to connect.
      * @param {string} title The tabs title.
      * @param {number} tabId The chrome tab id.
+     * @param {string} tabUrl The chrome tab's URL.
      * @public
      * @static
      */
-    connectTextArea: function(textarea, title, tabId) {
+    connectTextArea: function(textArea, title, tabId, tabUrl) {
         /** @type {HTMLTextAreaElement} */
-        var textAreaDom = $(textarea).get(0);
+        var textAreaDom = $(textArea).get(0);
 
         /**
          * @type {*}
@@ -67,9 +69,9 @@ var GhostText = {
          */
         var port = chrome.runtime.connect({name: "GhostText"});
 
-        textarea.on('input.sta propertychange.sta onmouseup.sta', function() {
+        textArea.on('input.sta propertychange.sta onmouseup.sta', function() {
             port.postMessage({
-                change: GhostText.textChange(title, textarea),
+                change: GhostText.textChange(title, textArea, tabUrl),
                 tabId: tabId
             });
         });
@@ -79,19 +81,18 @@ var GhostText = {
                 return;
             }
 
-            /**
-             * @type {{text: {string}, cursor: {min: {number}, max: {number}}}}
-             */
+            /** @type {{text: {string}, selections: [{start: {number}, end: {number}}]}} */
             var response = JSON.parse(msg.change);
             textarea.val(response.text);
-
-            textAreaDom.selectionStart = response.cursor.min;
-            textAreaDom.selectionEnd   = response.cursor.max;
+            /** @type {{start: {number}, end: {number}}} */
+            var minMaxSelection = GhostText.getMinMaxSelection(response.selections);
+            textAreaDom.selectionStart = minMaxSelection.start;
+            textAreaDom.selectionEnd   = minMaxSelection.end;
             textAreaDom.focus();
         });
 
         port.postMessage({
-            change: GhostText.textChange(title, textarea),
+            change: GhostText.textChange(title, textArea, tabUrl),
             tabId: tabId
         });
     },
@@ -200,23 +201,57 @@ var GhostText = {
     /**
      * Packs the title an the textarea's value and cursor into a change request the GhostText server understands.
      *
-     * @param {jQuery} textarea
      * @param {string} title
+     * @param {jQuery} textArea
+     * @param {string} tabUrl The tab's URL.
      * @returns {string}
      * @private
      * @static
      */
-    textChange: function(title, textarea) {
+    textChange: function(title, textArea, tabUrl) {
         var textAreaDom = $(this).get(0);
 
         return JSON.stringify({
                 title:  title,
-                text:   textarea.val(),
-                cursor: {
+                text:   textArea.val(),
+                selections: [{
                     start: textAreaDom.selectionStart,
                     end: textAreaDom.selectionEnd
-                }
+                }],
+                syntax: GhostText.guessSyntax(tabUrl)
             });
+    },
+
+    /**
+     * Guesses the syntax by the given URL.
+     *
+     * @param {string} url The URL used for the syntax lookup.
+     * @returns {string} The guessed syntax name.
+     * @private
+     * @static
+     * @todo This is currently just a method stub!
+     */
+    guessSyntax: function(url) {
+        return 'plaintext ' + url;
+    },
+
+    /**
+     * Extracts the min and max selection cursor position from the given selection array.
+     *
+     * @param {[{start: {number}, end: {number}}]} selection The selection array to extract the min max values.
+     * @returns {{start: {number}, end: {number}}}
+     * @private
+     * @static
+     */
+    getMinMaxSelection: function(selection) {
+        var minMaxSelection = {start: Number.MAX_VALUE, end: Number.MIN_VALUE};
+
+        for (var i = selection.length - 1; i >= 0; i--) {
+            minMaxSelection.start = Math.min(minMaxSelection.start, selection[i].start);
+            minMaxSelection.end   = Math.max(minMaxSelection.end, selection[i].end);
+        }
+
+        return minMaxSelection;
     },
 
     /**
@@ -235,7 +270,7 @@ var GhostText = {
     /**
      * Prints a error message if the server's protocol version differs from the clients.
      *
-     * @param version
+     * @param {number} version The protocol version.
      */
     checkProtocolVersion: function(version) {
         if (version === GhostText.protocolVersion) {
