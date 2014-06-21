@@ -3,9 +3,15 @@
  *
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
- * @type {{openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, errorHandler: Function}}
+ * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, errorHandler: Function}}
  */
 var GhostText = {
+    /**
+     * @type {number} The GhostText protocol version.
+     * @private
+     */
+    protocolVersion: 1,
+
     /**
      * Opens or activates a tab specified by it's url.
      *
@@ -133,11 +139,12 @@ var GhostText = {
             }
 
             $.get("http://localhost:" + GhostText.serverPort(), function(data) {
-                /** @type {number} */
-                var webSocketPort = data.WebSocketPort;
+                if (!GhostText.checkProtocolVersion(data.ProtocolVersion)) {
+                    return;
+                }
 
                 try {
-                    GhostText.connections[tabId] = new WebSocket('ws://localhost:' + webSocketPort);
+                    GhostText.connections[tabId] = new WebSocket('ws://localhost:' + data.WebSocketPort);
                 } catch (e) {
                     GhostText.errorHandler(e);
 
@@ -159,7 +166,7 @@ var GhostText = {
                         change: event.data
                     });
                 };
-            });
+            }).fail(function(e) { GhostText.errorHandler(e); });
         });
     },
 
@@ -223,5 +230,20 @@ var GhostText = {
         if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
             alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
         }
+    },
+
+    /**
+     * Prints a error message if the server's protocol version differs from the clients.
+     *
+     * @param version
+     */
+    checkProtocolVersion: function(version) {
+        if (version === GhostText.protocolVersion) {
+            return true;
+        }
+
+        alert(['Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion].join(' '));
+
+        return false;
     }
 };
