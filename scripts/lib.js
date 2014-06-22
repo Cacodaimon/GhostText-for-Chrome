@@ -83,7 +83,7 @@ var GhostText = {
 
             /** @type {{text: {string}, selections: [{start: {number}, end: {number}}]}} */
             var response = JSON.parse(msg.change);
-            textarea.val(response.text);
+            textArea.val(response.text);
             /** @type {{start: {number}, end: {number}}} */
             var minMaxSelection = GhostText.getMinMaxSelection(response.selections);
             textAreaDom.selectionStart = minMaxSelection.start;
