@@ -3,10 +3,6 @@ $(document).ready(function () {
         GhostText.openTab('options.html');
     });
 
-    $('#btn-about').click(function () {
-        GhostText.openTab('about.html');
-    });
-
     $('#btn-connect').click(function () {
         chrome.tabs.query({
             active: true,
