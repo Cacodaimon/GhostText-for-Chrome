@@ -43,10 +43,10 @@ var GhostText = {
      */
     serverPort: function(port) {
         if (port == null) {
-            return localStorage.getItem('server-port') || 4001;
+            return localStorage.getItem('server-port-v1') || 4001;
         }
 
-        localStorage.setItem('server-port', port);
+        localStorage.setItem('server-port-v1', port);
     },
 
     /**
