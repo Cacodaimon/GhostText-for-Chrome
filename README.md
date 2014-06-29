@@ -1,9 +1,9 @@
-GhostTextForChrome
+GhostText for Chrome
 ==================
 
 GhostText Chrome extension
 
-Read more about GhostText [here](https://github.com/Cacodaimon/GhostTextForSublimeText).
+Read more about GhostText in the [GhostText for Sublime Text repo](https://github.com/Cacodaimon/GhostTextForSublimeText).
 
 ## Installation of the development version
 

@@ -1,12 +1,12 @@
 {
-  "name": "SublimeTextArea",
+  "name": "GhostText",
   "icons": {
     "16": "icon/16.png",
     "32": "icon/32.png"
   },
   "version": "0.1",
   "manifest_version": 2,
-  "description": "Connects a textare with your SublimeText editor.",
+  "description": "Connects a textarea to SublimeText.",
   "content_scripts": [{
         "matches": ["http://*/*", "https://*/*"],
         "js": ["vendor/jquery.min.js", "scripts/lib.js", "scripts/content.js"],
