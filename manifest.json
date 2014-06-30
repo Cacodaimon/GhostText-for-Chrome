@@ -13,7 +13,11 @@
         "run_at": "document_end"
   }],
   "background": {
-    "page": "background.html"
+    "scripts": [
+      "vendor/jquery.min.js",
+      "scripts/lib.js",
+      "scripts/background.js"
+    ]
   },
   "permissions": [
     "tabs","<all_urls>"

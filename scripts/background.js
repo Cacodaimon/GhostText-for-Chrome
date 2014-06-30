@@ -1,6 +1,5 @@
-$(document).ready(function () {
-    GhostText.connectionHandler();
-});
+GhostText.connectionHandler();
+
 chrome.browserAction.onClicked.addListener(function () {
     chrome.tabs.query({
         active: true,
