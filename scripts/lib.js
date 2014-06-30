@@ -154,10 +154,17 @@ var GhostText = {
 
                 GhostText.connections[tabId].onopen = function () {
                     GhostText.connections[tabId].send(msg.change);
+                    console.log('Connection: opened');
                 };
 
-                GhostText.connections[tabId].onclose = GhostText.connections[tabId].onerror = function (event) {
+                GhostText.connections[tabId].onclose = function () {
                     GhostText.closeConnection(tabId);
+                    console.log('Connection: closed');
+                };
+
+                GhostText.connections[tabId].onerror = function (event) {
+                    GhostText.closeConnection(tabId);
+                    console.log('Connection: error:', e);
                     GhostText.errorHandler(event);
                 };
 
@@ -190,7 +197,7 @@ var GhostText = {
             try {
                 GhostText.connections[tabId].close();
             } catch (e) {
-                console.log(e);
+                console.log('Connection: error during closing:', e);
             }
         }
         delete GhostText.connections[tabId];
@@ -263,7 +270,7 @@ var GhostText = {
      */
     errorHandler: function(e) {
         if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
-            alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. See if there are any errors in Sublime Text\'s console');
+            alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. Make sure that the port matches (4001 is the default). See if there are any errors in Sublime Text\'s console');
         }
     },
 
