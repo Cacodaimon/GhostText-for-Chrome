@@ -5,6 +5,12 @@ chrome.runtime.onMessage.addListener(function(request) {
 
     var connectTextarea = function (textarea) {
         GhostText.connectTextArea($(textarea), $('title').text(), request.tabId, window.location);
+        window.addEventListener('beforeunload', function () {
+            chrome.runtime.sendMessage({
+                action: 'close-connection',
+                tabId: request.tabId
+            });
+        });
     };
 
     var $textareas = $('textarea');

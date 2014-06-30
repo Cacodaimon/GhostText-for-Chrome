@@ -114,7 +114,12 @@ var GhostText = {
     connectionHandler: function() {
         chrome.runtime.onConnect.addListener(GhostText.connectionHandlerOnConnect);
 
-        chrome.tabs.onRemoved.addListener(GhostText.closeConnection);
+        chrome.runtime.onMessage.addListener(function(request) {
+            if (!request.action || request.action !== 'close-connection') {
+                return;
+            }
+            GhostText.closeConnection(request.tabId);
+        });
 
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
