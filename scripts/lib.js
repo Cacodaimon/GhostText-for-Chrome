@@ -149,7 +149,7 @@ var GhostText = {
 
         port.onMessage.addListener(function(msg) {
             /** @type {string} The chrome tab id. */
-            var tabId = msg.tabId.toString();
+            var tabId = msg.tabId;
 
             if (GhostText.connections[tabId] && GhostText.connections[tabId].readyState == 1) { // 1 - connection established
                 GhostText.connections[tabId].send(msg.change);
@@ -198,14 +198,12 @@ var GhostText = {
     /**
      * Closes a WebSocket connected to a tab.
      *
-     * @param {number|string} tabId
+     * @param {number} tabId
      * @returns {boolean}
      * @private
      * @static
      */
     closeConnection: function(tabId) {
-        tabId = tabId.toString();
-
         if (!GhostText.connections[tabId]) {
             return false;
         }
