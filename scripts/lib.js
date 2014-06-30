@@ -171,6 +171,14 @@ var GhostText = {
                 }
 
                 GhostText.connections[tabId].onopen = function () {
+                    chrome.browserAction.setBadgeText({
+                        text: '✓',
+                        tabId: tabId
+                    });
+                    chrome.browserAction.setBadgeBackgroundColor({
+                        color: '#008040',
+                        tabId: tabId
+                    });
                     GhostText.connections[tabId].send(msg.change);
                     console.log('Connection: opened');
                 };
@@ -217,6 +225,10 @@ var GhostText = {
         }
         delete GhostText.connections[tabId];
         console.log('Connection: closed');
+        chrome.browserAction.setBadgeText({
+            text: '',
+            tabId: tabId
+        });
 
         return true;
     },
