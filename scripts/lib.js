@@ -115,6 +115,19 @@ var GhostText = {
         chrome.runtime.onConnect.addListener(GhostText.connectionHandlerOnConnect);
 
         chrome.tabs.onRemoved.addListener(GhostText.closeConnection);
+
+        //inform the content script that the button has been clicked
+        chrome.browserAction.onClicked.addListener(function () {
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, function(tabs){
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'button-clicked',
+                    tabId: tabs[0].id
+                });
+            });
+        });
     },
 
     /**
@@ -159,7 +172,6 @@ var GhostText = {
 
                 GhostText.connections[tabId].onclose = function () {
                     GhostText.closeConnection(tabId);
-                    console.log('Connection: closed');
                 };
 
                 GhostText.connections[tabId].onerror = function (event) {
@@ -201,6 +213,7 @@ var GhostText = {
             }
         }
         delete GhostText.connections[tabId];
+        console.log('Connection: closed');
 
         return true;
     },

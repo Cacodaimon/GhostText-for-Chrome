@@ -1,13 +1,12 @@
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (!request.textarea || request.textarea != 'connect') {
+chrome.runtime.onMessage.addListener(function(request) {
+    if (!request.action || request.action !== 'button-clicked') {
         return;
     }
 
     var connectTextarea = function (textarea) {
-        GhostText.connectTextArea($(textarea), $('title').text(), request.id, window.location);
+        GhostText.connectTextArea($(textarea), $('title').text(), request.tabId, window.location);
     };
 
-    sendResponse({textarea: 'connecting'});
     var $textareas = $('textarea');
     var $focusedTextarea = $textareas.filter(':focus');
     if ($focusedTextarea.length) {
