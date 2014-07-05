@@ -25,6 +25,7 @@ function openConnection (request) {
         isWaitingForUser = false;
         GhostText.connectTextArea($(textarea), $('title').text(), request.tabId, window.location);
         window.addEventListener('beforeunload', function () {
+            closeConnection(request);
         });
     };
 
