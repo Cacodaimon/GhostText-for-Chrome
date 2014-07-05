@@ -1,5 +1,7 @@
 var isConnected = false;
 var isWaitingForUser = false;
+var $connectedTextarea;
+
 function reactToButtonClicked (request) {
     if (request.action && request.action == 'button-clicked') {
         if(isWaitingForUser) {
@@ -12,20 +14,42 @@ function reactToButtonClicked (request) {
         }
     }
 }
+
 function closeConnection (request) {
     isConnected = false;
     chrome.runtime.sendMessage({
         action: 'close-connection',
         tabId: request.tabId
     });
+
+    //highlight selected textarea
+    $connectedTextarea.css({
+        outline: ''
+    });
 }
+
 function openConnection (request) {
     var connectTextarea = function (textarea) {
+        $connectedTextarea = $('textarea');
         isConnected = true;
         isWaitingForUser = false;
-        GhostText.connectTextArea($(textarea), $('title').text(), request.tabId, window.location);
+
+        //open actual connection
+        GhostText.connectTextArea($connectedTextarea, $('title').text(), request.tabId, window.location);
+
+        //close connection when the textarea is removed from the document
+        $connectedTextarea.on('DOMNodeRemovedFromDocument', function () {
+            closeConnection(request);
+        });
+
+        //close textarea when the tab is closed or reloaded
         window.addEventListener('beforeunload', function () {
             closeConnection(request);
+        });
+
+        //highlight selected textarea
+        $connectedTextarea.css({
+            outline: 'dashed 2px #f97e2e'
         });
     };
 
@@ -47,6 +71,5 @@ function openConnection (request) {
             $textareas.on('focus.ghost-text', connectAndForgetTheRest);
     }
 }
-
 
 chrome.runtime.onMessage.addListener(reactToButtonClicked);
