@@ -1,13 +1,8 @@
-var isConnected = false;
-var isWaitingForUser = false;
-var $connectedTextarea;
+var $connectedTextarea = $();
 
 function reactToButtonClicked (request) {
     if (request.action && request.action == 'button-clicked') {
-        if(isWaitingForUser) {
-            $textareas.off('.ghost-text');
-        }
-        if (isConnected) {
+        if ($connectedTextarea.length) {
             closeConnection(request);
         } else {
             openConnection(request);
@@ -16,23 +11,26 @@ function reactToButtonClicked (request) {
 }
 
 function closeConnection (request) {
-    isConnected = false;
+
     chrome.runtime.sendMessage({
         action: 'close-connection',
         tabId: request.tabId
     });
 
-    //highlight selected textarea
+    //remove highlight from connected textarea
     $connectedTextarea.css({
         outline: ''
     });
+
+    $connectedTextarea.off('.ghost-text'); //remove all event listeners
+    $connectedTextarea = $();
 }
 
 function openConnection (request) {
+    $connectedTextarea.off('.ghost-text'); //remove all event listeners
+
     var connectTextarea = function (textarea) {
         $connectedTextarea = $('textarea');
-        isConnected = true;
-        isWaitingForUser = false;
 
         //open actual connection
         GhostText.connectTextArea($connectedTextarea, $('title').text(), request.tabId, window.location);
@@ -62,7 +60,6 @@ function openConnection (request) {
         case 0: alert('No textarea elements on this page'); break;
         case 1: connectTextarea($textareas); break;
         default:
-            isWaitingForUser = true;
             var connectAndForgetTheRest = function () {
                 console.log('User focused:', this);
                 connectTextarea(this);

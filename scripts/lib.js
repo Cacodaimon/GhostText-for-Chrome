@@ -69,7 +69,7 @@ var GhostText = {
          */
         var port = chrome.runtime.connect({name: "GhostText"});
 
-        textArea.on('input.sta propertychange.sta onmouseup.sta', function() {
+        textArea.on('input.ghost-text propertychange.ghost-text onmouseup.ghost-text', function() {
             port.postMessage({
                 change: GhostText.textChange(title, textArea, tabUrl),
                 tabId: tabId
