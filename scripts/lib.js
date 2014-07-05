@@ -253,6 +253,7 @@ var GhostText = {
                     start: textAreaDom.selectionStart,
                     end: textAreaDom.selectionEnd
                 }],
+                url: tabUrl.host,
                 syntax: GhostText.guessSyntax(tabUrl)
             });
     },
@@ -267,7 +268,7 @@ var GhostText = {
      * @todo This is currently just a method stub!
      */
     guessSyntax: function(url) {
-        return 'plaintext ' + url;
+        return 'plaintext';
     },
 
     /**
@@ -306,6 +307,8 @@ var GhostText = {
      * Prints a error message if the server's protocol version differs from the clients.
      *
      * @param {number} version The protocol version.
+     * @private
+     * @static
      */
     checkProtocolVersion: function(version) {
         if (version === GhostText.protocolVersion) {
