@@ -1,3 +1,57 @@
+var GhostTextContent = {
+    /**
+     * Displays the passed message to the user.
+     *
+     * @param  {string} message Message to display
+     */
+    informUser: function (message, stay) {
+        console.info('GhostText:', message);
+        GThumane.remove();
+
+        var timeout = stay ? 0 : GhostTextContent.getMessageDisplayTime(message);
+        GThumane.log(message, {
+            timeout: timeout,
+            clickToClose: true
+        });
+    },
+
+    /**
+     * Displays the passed message to the user as an error
+     *
+     * @param  {string} message Message to display
+     */
+    alertUser: function (message) {
+        console.warn('GhostText:', message);
+        GThumane.remove();
+
+        var timeout = stay ? 0 : GhostTextContent.getMessageDisplayTime(message);
+        GThumane.log(message, {
+            timeout: timeout,
+            clickToClose: true,
+            addnCls: 'ghost-text-message-error'
+        });
+    },
+    /**
+     * Hides any messages on screen
+     *
+     * @param  {string} message Message to display
+     */
+    hideMessages: function () {
+        GThumane.remove();
+    },
+
+    /**
+     * Gets how long a message needs to stay on screen
+     * @param  {String} message Message to display
+     * @return {Number}         in milliseconds
+     */
+    getMessageDisplayTime: function (message) {
+        var wpm = 100;//180 is the average words read per minute, make it slower
+        var duration = message.split(' ').length / wpm * 60 * 1000;
+        return duration;
+    }
+};
+
 var $connectedTextarea = $();
 
 function reactToButtonClicked (request) {
