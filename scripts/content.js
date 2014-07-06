@@ -81,7 +81,6 @@ function closeConnection (request) {
 }
 
 function openConnection (request) {
-    $connectedTextarea.off('.ghost-text'); //remove all event listeners
 
     var connectTextarea = function (textarea) {
         $connectedTextarea = $('textarea');
@@ -106,6 +105,8 @@ function openConnection (request) {
     };
 
     var $textareas = $('textarea');
+    $textareas.off('.ghost-text'); //remove all event listeners
+
     var $focusedTextarea = $textareas.filter(':focus');
     if ($focusedTextarea.length) {
         $textareas = $focusedTextarea;
