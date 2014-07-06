@@ -1,3 +1,4 @@
+'use strict';
 var GhostTextContent = {
     /**
      * This tab's ID
@@ -14,7 +15,8 @@ var GhostTextContent = {
     /**
      * Displays the passed message to the user.
      *
-     * @param  {string} message Message to display
+     * @param  {string}  message Message to display
+     * @param  {boolean} stay    Whether the message will stay on indefinitely
      */
     informUser: function (message, stay) {
         console.info('GhostText:', message);
@@ -31,8 +33,9 @@ var GhostTextContent = {
      * Displays the passed message to the user as an error
      *
      * @param  {string} message Message to display
+     * @param  {boolean} stay    Whether the message will stay on indefinitely
      */
-    alertUser: function (message) {
+    alertUser: function (message, stay) {
         console.warn('GhostText:', message);
         GThumane.remove();
 
@@ -123,8 +126,12 @@ var GhostTextContent = {
             $textareas = $focusedTextarea;
         }
         switch  ($textareas.length) {
-            case 0: GhostTextContent.alertUser('No textarea elements on this page'); break;
-            case 1: GhostTextContent.connectTextarea($textareas); break;
+            case 0:
+                GhostTextContent.alertUser('No textarea elements on this page');
+                break;
+            case 1:
+                GhostTextContent.connectTextarea($textareas);
+                break;
             default:
                 var connectAndForgetTheRest = function () {
                     console.log('User focused:', this);
@@ -154,7 +161,7 @@ var GhostTextContent = {
 
         //On the first connection, setup the port
         if(!GhostTextContent.port) {
-            GhostTextContent.port = chrome.runtime.connect({name: "GhostText"});
+            GhostTextContent.port = chrome.runtime.connect({name: 'GhostText'});
         }
 
 

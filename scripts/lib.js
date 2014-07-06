@@ -1,3 +1,4 @@
+'use strict';
 /**
  * GhostText for Chrome lib.
  *
@@ -108,7 +109,7 @@ var GhostText = {
      * @private
      */
     connectionHandlerOnConnect: function(port) {
-        if (port.name !== "GhostText") {
+        if (port.name !== 'GhostText') {
             return;
         }
 
@@ -122,7 +123,7 @@ var GhostText = {
                 return;
             }
 
-            $.get("http://localhost:" + GhostText.serverPort(), function(data) {
+            $.get('http://localhost:' + GhostText.serverPort(), function(data) {
                 if (!GhostText.checkProtocolVersion(data.ProtocolVersion)) {
                     return;
                 }
@@ -154,7 +155,7 @@ var GhostText = {
 
                 GhostText.connections[tabId].onerror = function (event) {
                     GhostText.closeConnection(tabId);
-                    console.log('Connection: error:', e);
+                    console.log('Connection: error:', event);
                     GhostText.errorHandler(event);
                 };
 
@@ -181,7 +182,7 @@ var GhostText = {
             return false;
         }
 
-        if (GhostText.connections[tabId].readyState != 3) { // 3 - connection closed or could not open
+        if (GhostText.connections[tabId].readyState !== 3) { // 3 - connection closed or could not open
             try {
                 GhostText.connections[tabId].close();
             } catch (e) {
