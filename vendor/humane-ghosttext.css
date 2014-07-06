@@ -1,13 +1,11 @@
 /*Copyright (c) 2011 Marc Harter <wavded@gmail.com> */
 /*flatty.css, customized for GhostText*/
-.humane,
 .ghost-text-message {
   position: fixed;
   -webkit-transition: 0.4s ease-in-out;
   transition:  0.4s ease-in-out;
   z-index: 2147483647;
 }
-.humane,
 .ghost-text-message {
   font-family: sans-serif;
   font-size: 16px;
@@ -24,38 +22,30 @@
   -webkit-transform: translateY(-100px);
   transform: translateY(-100px);
 }
-.humane p,
 .ghost-text-message p,
-.humane ul,
 .ghost-text-message ul {
   margin: 0;
   padding: 0;
 }
-.humane ul,
 .ghost-text-message ul {
   list-style: none;
 }
-.humane.ghost-text-message-info,
 .ghost-text-message.ghost-text-message-info {
   background-color: #3498db;
   color: #FFF;
 }
-.humane.ghost-text-message-success,
 .ghost-text-message.ghost-text-message-success {
   background-color: #18bc9c;
   color: #FFF;
 }
-.humane.ghost-text-message-error,
 .ghost-text-message.ghost-text-message-error {
   background-color: #e74c3c;
   color: #FFF;
 }
-.humane-animate,
 .ghost-text-message.ghost-text-message-animate {
   -webkit-transform: translateY(0);
   transform: translateY(0);
 }
-.humane-js-animate,
 .ghost-text-message.ghost-text-message-js-animate {
   -webkit-transform: translateY(0);
   transform: translateY(0);
