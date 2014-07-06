@@ -202,14 +202,14 @@ var GhostText = {
     /**
      * Packs the title an the textarea's value and cursor into a change request the GhostText server understands.
      *
-     * @param {string} title
-     * @param {jQuery} textArea
-     * @param {string} tabUrl The tab's URL.
+     * @param {string}   title
+     * @param {jQuery}   textArea
+     * @param {object}   loc The tab's location object.
      * @returns {string}
      * @private
      * @static
      */
-    textChange: function(title, textArea, tabUrl) {
+    textChange: function(title, textArea, loc) {
         var textAreaDom = $(this).get(0);
 
         return JSON.stringify({
@@ -219,8 +219,8 @@ var GhostText = {
                     start: textAreaDom.selectionStart,
                     end: textAreaDom.selectionEnd
                 }],
-                url: tabUrl.host,
-                syntax: GhostText.guessSyntax(tabUrl)
+                url: loc.host,
+                syntax: GhostText.guessSyntax(loc)
             });
     },
 

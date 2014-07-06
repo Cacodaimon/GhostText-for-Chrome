@@ -213,7 +213,7 @@ var GhostTextContent = {
         var title = $('title').text();
 
         GhostTextContent.port.postMessage({
-            change: GhostText.textChange(title, GhostTextContent.$connectedTextarea, location.href),
+            change: GhostText.textChange(title, GhostTextContent.$connectedTextarea, location),
             tabId: GhostTextContent.tabId
         });
     }
