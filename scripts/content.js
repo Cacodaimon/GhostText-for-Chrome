@@ -42,88 +42,114 @@ var GhostTextContent = {
 
     /**
      * Gets how long a message needs to stay on screen
-     * @param  {String} message Message to display
-     * @return {Number}         in milliseconds
+     *
+     * @param  {string} message Message to display
+     * @return {number}         in milliseconds
      */
     getMessageDisplayTime: function (message) {
         var wpm = 100;//180 is the average words read per minute, make it slower
         var duration = message.split(' ').length / wpm * 60 * 1000;
         return duration;
+    },
+
+    /**
+     * Handles messages sent from background.js
+     *
+     * @param  {object} request The request object passed by Chrome
+     */
+    messageHandler: function (request) {
+        if (!request || !request.action) {
+            return;
+        }
+        switch (request.action) {
+            case 'button-clicked':
+                if (GhostTextContent.$connectedTextarea.length) {
+                    GhostTextContent.disconnectTextarea(request);
+                } else {
+                    GhostTextContent.tryToConnectTextarea(request);
+                }
+                break;
+        }
+    },
+
+    /**
+     * The textarea we're connected to
+     * @type {jQuery}
+     */
+    $connectedTextarea: $(),
+
+    /**
+     * Disconnect textarea
+     *
+     * @param  {object} request The request object passed by Chrome
+     */
+    disconnectTextarea: function (request) {
+
+        chrome.runtime.sendMessage({
+            action: 'close-connection',
+            tabId: request.tabId
+        });
+
+        //remove highlight from connected textarea
+        GhostTextContent.$connectedTextarea.css({
+            outline: ''
+        });
+
+        GhostTextContent.$connectedTextarea.off('.ghost-text'); //remove all event listeners
+        GhostTextContent.$connectedTextarea = $();
+    },
+
+
+    /**
+     * Look for textareas in document and connect to is as soon as possible
+     *
+     * @param  {object} request The request object passed by Chrome
+     */
+    tryToConnectTextarea: function (request) {
+
+        var connectTextarea = function (textarea) {
+            GhostTextContent.$connectedTextarea = $('textarea');
+
+            //open actual connection
+            GhostText.connectTextArea(GhostTextContent.$connectedTextarea, $('title').text(), request.tabId, window.location);
+
+            //close connection when the textarea is removed from the document
+            GhostTextContent.$connectedTextarea.on('DOMNodeRemovedFromDocument', function () {
+                GhostTextContent.disconnectTextarea(request);
+            });
+
+            //close textarea when the tab is closed or reloaded
+            window.addEventListener('beforeunload', function () {
+                GhostTextContent.disconnectTextarea(request);
+            });
+
+            //highlight selected textarea
+            GhostTextContent.$connectedTextarea.css({
+                outline: 'dashed 2px #f97e2e'
+            });
+        };
+
+        var $textareas = $('textarea');
+        $textareas.off('.ghost-text'); //remove all event listeners
+
+        var $focusedTextarea = $textareas.filter(':focus');
+        if ($focusedTextarea.length) {
+            $textareas = $focusedTextarea;
+        }
+        switch  ($textareas.length) {
+            case 0: GhostTextContent.alertUser('No textarea elements on this page'); break;
+            case 1: connectTextarea($textareas); break;
+            default:
+                var connectAndForgetTheRest = function () {
+                    console.log('User focused:', this);
+                    connectTextarea(this);
+                    $textareas.off('.ghost-text');
+                    GhostTextContent.hideMessages();
+                };
+                GhostTextContent.informUser('There are multiple textareas on this page. <br> Click on the one you want to use.', true);
+                $textareas.on('focus.ghost-text', connectAndForgetTheRest);
+        }
     }
 };
 
-var $connectedTextarea = $();
-
-function reactToButtonClicked (request) {
-    if (request.action && request.action == 'button-clicked') {
-        if ($connectedTextarea.length) {
-            closeConnection(request);
-        } else {
-            openConnection(request);
-        }
-    }
-}
-
-function closeConnection (request) {
-
-    chrome.runtime.sendMessage({
-        action: 'close-connection',
-        tabId: request.tabId
-    });
-
-    //remove highlight from connected textarea
-    $connectedTextarea.css({
-        outline: ''
-    });
-
-    $connectedTextarea.off('.ghost-text'); //remove all event listeners
-    $connectedTextarea = $();
-}
-
-function openConnection (request) {
-
-    var connectTextarea = function (textarea) {
-        $connectedTextarea = $('textarea');
-
-        //open actual connection
-        GhostText.connectTextArea($connectedTextarea, $('title').text(), request.tabId, window.location);
-
-        //close connection when the textarea is removed from the document
-        $connectedTextarea.on('DOMNodeRemovedFromDocument', function () {
-            closeConnection(request);
-        });
-
-        //close textarea when the tab is closed or reloaded
-        window.addEventListener('beforeunload', function () {
-            closeConnection(request);
-        });
-
-        //highlight selected textarea
-        $connectedTextarea.css({
-            outline: 'dashed 2px #f97e2e'
-        });
-    };
-
-    var $textareas = $('textarea');
-    $textareas.off('.ghost-text'); //remove all event listeners
-
-    var $focusedTextarea = $textareas.filter(':focus');
-    if ($focusedTextarea.length) {
-        $textareas = $focusedTextarea;
-    }
-    switch  ($textareas.length) {
-        case 0: GhostTextContent.alertUser('No textarea elements on this page'); break;
-        case 1: connectTextarea($textareas); break;
-        default:
-            var connectAndForgetTheRest = function () {
-                console.log('User focused:', this);
-                connectTextarea(this);
-                $textareas.off('.ghost-text');
-                GhostTextContent.hideMessages();
-            };
-            GhostTextContent.informUser('There are multiple textareas on this page. <br> Click on the one you want to use.', true);
-            $textareas.on('focus.ghost-text', connectAndForgetTheRest);
-    }
-}
-
-chrome.runtime.onMessage.addListener(reactToButtonClicked);
+chrome.runtime.onMessage.addListener(GhostTextContent.messageHandler);
