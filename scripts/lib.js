@@ -64,54 +64,6 @@ var GhostText = {
     },
 
     /**
-     * Connects a HTML textarea to a GhostText server by messaging through the background script..
-     *
-     * @param {jQuery} textArea The HTML textarea element to connect.
-     * @param {string} title The tabs title.
-     * @param {number} tabId The chrome tab id.
-     * @param {string} tabUrl The chrome tab's URL.
-     * @public
-     * @static
-     */
-    connectTextArea: function(textArea, title, tabId, tabUrl) {
-        /** @type {HTMLTextAreaElement} */
-        var textAreaDom = $(textArea).get(0);
-
-        /**
-         * @type {*}
-         * @see https://developer.chrome.com/extensions/runtime#type-Port
-         */
-        var port = chrome.runtime.connect({name: "GhostText"});
-
-        textArea.on('input.ghost-text propertychange.ghost-text onmouseup.ghost-text', function() {
-            port.postMessage({
-                change: GhostText.textChange(title, textArea, tabUrl),
-                tabId: tabId
-            });
-        });
-
-        port.onMessage.addListener(function(msg) {
-            if (msg.tabId != tabId) {
-                return;
-            }
-
-            /** @type {{text: {string}, selections: [{start: {number}, end: {number}}]}} */
-            var response = JSON.parse(msg.change);
-            textArea.val(response.text);
-            /** @type {{start: {number}, end: {number}}} */
-            var minMaxSelection = GhostText.getMinMaxSelection(response.selections);
-            textAreaDom.selectionStart = minMaxSelection.start;
-            textAreaDom.selectionEnd   = minMaxSelection.end;
-            textAreaDom.focus();
-        });
-
-        port.postMessage({
-            change: GhostText.textChange(title, textArea, tabUrl),
-            tabId: tabId
-        });
-    },
-
-    /**
      * Chrome tab id to WebSocket mapping.
      * @type {Array<WebSocket>}
      * @private
