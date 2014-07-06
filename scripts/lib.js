@@ -191,6 +191,13 @@ var GhostText = {
         }
         delete GhostText.connections[tabId];
         console.log('Connection: closed');
+
+        //inform tab that the connection was closed
+        chrome.tabs.sendMessage(tabId, {
+            action: 'disconnect',
+            tabId: tabId
+        });
+
         chrome.browserAction.setBadgeText({
             text: '',
             tabId: tabId
