@@ -1,5 +1,17 @@
 var GhostTextContent = {
     /**
+     * This tab's ID
+     * @type {Number}
+     */
+    tabId: null,
+
+    /**
+     * @type {*}
+     * @see https://developer.chrome.com/extensions/runtime#type-Port
+     */
+    port: null,
+
+    /**
      * Displays the passed message to the user.
      *
      * @param  {string} message Message to display
@@ -59,12 +71,16 @@ var GhostTextContent = {
      */
     messageHandler: function (request) {
         console.log('Got message:', request);
-        if (!request || !request.action) {
+        if (!request || !request.action || !request.tabId) {
             return;
         }
+
+        //Store this tab's id as soon as possible
+        GhostTextContent.tabId = request.tabId;
+
         switch (request.action) {
             case 'select-and-connect':
-                GhostTextContent.selectAndConnect(request.tabId);
+                GhostTextContent.selectAndConnect();
                 break;
             case 'disconnect':
                 GhostTextContent.disconnectTextarea();
@@ -97,10 +113,8 @@ var GhostTextContent = {
 
     /**
      * Look for textareas in document and connect to is as soon as possible
-     *
-     * @param {number} tabId The chrome tab id.
      */
-    selectAndConnect: function (tabId) {
+    selectAndConnect: function () {
         var $textareas = $('textarea');
         $textareas.off('.ghost-text'); //remove all event listeners
 
@@ -110,11 +124,11 @@ var GhostTextContent = {
         }
         switch  ($textareas.length) {
             case 0: GhostTextContent.alertUser('No textarea elements on this page'); break;
-            case 1: GhostTextContent.connectTextarea($textareas, tabId); break;
+            case 1: GhostTextContent.connectTextarea($textareas); break;
             default:
                 var connectAndForgetTheRest = function () {
                     console.log('User focused:', this);
-                    GhostTextContent.connectTextarea(this, tabId);
+                    GhostTextContent.connectTextarea(this);
                     $textareas.off('.ghost-text');
                     GhostTextContent.hideMessages();
                 };
@@ -127,50 +141,35 @@ var GhostTextContent = {
      * Connects a HTML textarea to a GhostText server by messaging through the background script
      *
      * @param {element} textArea The HTML textarea element to connect.
-     * @param {number}  tabId The chrome tab id.
      * @public
      * @static
      */
-    connectTextarea: function (textarea, tabId) {
+    connectTextarea: function (textarea) {
         /** @type {jQuery} */
         var $textarea = GhostTextContent.$connectedTextarea = $(textarea);
 
         /** @type {HTMLTextAreaElement} */
         textarea = $textarea.get(0);
 
+
+        //On the first connection, setup the port
+        if(!GhostTextContent.port) {
+            GhostTextContent.port = chrome.runtime.connect({name: "GhostText"});
+        }
+
+
+        //Send content of textarea now and when it changes
+        GhostTextContent.sendTextToBackground();
+        $textarea.on('input.ghost-text propertychange.ghost-text onmouseup.ghost-text', GhostTextContent.sendTextToBackground);
+
+
         /**
-         * @type {string}
+         * Receive messages from background.js
+         *
+         * @param  {object} msg The message received
          */
-        var title = $('title').text();
-
-        /**
-         * @type {*}
-         * @see https://developer.chrome.com/extensions/runtime#type-Port
-         */
-        var port = chrome.runtime.connect({name: "GhostText"});
-
-
-        //close connection when the textarea is removed from the document
-        $textarea.on('DOMNodeRemovedFromDocument.ghost-text', GhostTextContent.disconnectTextarea);
-
-        //close textarea when the tab is closed or reloaded
-        window.addEventListener('beforeunload', GhostTextContent.disconnectTextarea);
-
-        //highlight selected textarea
-        $textarea.css({
-            outline: 'dashed 2px #f97e2e'
-        });
-
-
-        $textarea.on('input.ghost-text propertychange.ghost-text onmouseup.ghost-text', function() {
-            port.postMessage({
-                change: GhostText.textChange(title, $textarea, location.href),
-                tabId: tabId
-            });
-        });
-
-        port.onMessage.addListener(function(msg) {
-            if (msg.tabId !== tabId) {
+        GhostTextContent.port.onMessage.addListener(function(msg) {
+            if (msg.tabId !== GhostTextContent.tabId) {
                 return;
             }
 
@@ -184,9 +183,31 @@ var GhostTextContent = {
             textarea.focus();
         });
 
-        port.postMessage({
-            change: GhostText.textChange(title, $textarea, location.href),
-            tabId: tabId
+        //close connection when the textarea is removed from the document
+        $textarea.on('DOMNodeRemovedFromDocument.ghost-text', GhostTextContent.disconnectTextarea);
+
+        //close textarea when the tab is closed or reloaded
+        window.addEventListener('beforeunload', GhostTextContent.disconnectTextarea);
+
+        //highlight selected textarea
+        $textarea.css({
+            outline: 'dashed 2px #f97e2e'
+        });
+    },
+
+
+    /**
+     * Send content of textarea to background.js
+     */
+    sendTextToBackground: function () {
+        /**
+         * @type {string}
+         */
+        var title = $('title').text();
+
+        GhostTextContent.port.postMessage({
+            change: GhostText.textChange(title, GhostTextContent.$connectedTextarea, location.href),
+            tabId: GhostTextContent.tabId
         });
     }
 };
