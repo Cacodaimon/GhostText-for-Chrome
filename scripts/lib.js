@@ -14,7 +14,7 @@ var GhostText = {
     protocolVersion: 1,
 
     /**
-     * Opens or activates a tab specified by it's url.
+     * Opens or activates a tab specified by its url.
      *
      * @param {string} url The tab's URL.
      * @public
@@ -56,7 +56,7 @@ var GhostText = {
      * @static
      */
     serverPort: function(port) {
-        if (port == null) {
+        if (!port) {
             return localStorage.getItem('server-port-v1') || 4001;
         }
 
@@ -156,16 +156,15 @@ var GhostText = {
      * @private
      */
     connectionHandlerOnConnect: function(port) {
-        if (port.name != "GhostText") {
+        if (port.name !== "GhostText") {
             return;
         }
 
         port.onMessage.addListener(function(msg) {
-                    console.log(msg);
             /** @type {string} The chrome tab id. */
             var tabId = msg.tabId;
 
-            if (GhostText.connections[tabId] && GhostText.connections[tabId].readyState == 1) { // 1 - connection established
+            if (GhostText.connections[tabId] && GhostText.connections[tabId].readyState === 1) { // 1 - connection established
                 GhostText.connections[tabId].send(msg.change);
 
                 return;
@@ -312,7 +311,7 @@ var GhostText = {
      * @static
      */
     errorHandler: function(e) {
-        if(e && (e.target && e.target.readyState === 3) || e.status == 404) {
+        if(e && (e.target && e.target.readyState === 3) || e.status === 404) {
             alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. Make sure that the port matches (4001 is the default). See if there are any errors in Sublime Text\'s console');
         }
     },

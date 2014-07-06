@@ -102,13 +102,13 @@ var GhostTextContent = {
     tryToConnectTextarea: function (tabId) {
 
         var connectTextarea = function (textarea) {
-            GhostTextContent.$connectedTextarea = $('textarea');
+            GhostTextContent.$connectedTextarea = $(textarea);
 
             //open actual connection
             GhostText.connectTextArea(GhostTextContent.$connectedTextarea, $('title').text(), tabId, window.location);
 
             //close connection when the textarea is removed from the document
-            GhostTextContent.$connectedTextarea.on('DOMNodeRemovedFromDocument', function () {
+            GhostTextContent.$connectedTextarea.on('DOMNodeRemovedFromDocument.ghost-text', function () {
                 GhostTextContent.disconnectTextarea();
             });
 
