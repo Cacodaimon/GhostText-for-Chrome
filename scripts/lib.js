@@ -34,6 +34,20 @@ var GhostText = {
     },
 
     /**
+     * Call the callback with the current tab id (async)
+     *
+     * @param  {function} callback The function to call with the id
+     */
+    inCurrentTab: function (callback) {
+        chrome.tabs.query({
+            active: true,
+            currentWindow: true
+        }, function(tabs){
+            callback(tabs[0].id);
+        });
+    },
+
+    /**
      * Gets or sets the GhostText server main port.
      *
      * @param {number} port The TCP port number.
@@ -114,22 +128,14 @@ var GhostText = {
     connectionHandler: function() {
         chrome.runtime.onConnect.addListener(GhostText.connectionHandlerOnConnect);
 
-        chrome.runtime.onMessage.addListener(function(request) {
-            if (!request.action || request.action !== 'close-connection') {
-                return;
-            }
-            GhostText.closeConnection(request.tabId);
-        });
+        chrome.runtime.onMessage.addListener(GhostText.messageHandler);
 
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, function(tabs){
-                chrome.tabs.sendMessage(tabs[0].id, {
+            GhostText.inCurrentTab(function(tabId){
+                chrome.tabs.sendMessage(tabId, {
                     action: 'button-clicked',
-                    tabId: tabs[0].id
+                    tabId: tabId
                 });
             });
         });
@@ -318,5 +324,21 @@ var GhostText = {
         alert(['Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion].join(' '));
 
         return false;
-    }
+    },
+
+    /**
+     * Handles messages sent from other parts of the extension
+     *
+     * @param  {object} request The request object passed by Chrome
+     */
+    messageHandler: function (request) {
+        if (!request || !request.action) {
+            return;
+        }
+        switch (request.action) {
+            case 'close-connection':
+                GhostText.closeConnection(request.tabId);
+                break;
+        }
+    },
 };
