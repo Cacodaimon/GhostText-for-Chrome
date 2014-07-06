@@ -132,9 +132,16 @@ var GhostText = {
 
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
-            GhostText.inCurrentTab(function(tabId){
+            GhostText.inCurrentTab(function toggleConnection (tabId){
+                var message;
+                if (GhostText.connections[tabId]) {
+                    message = 'disconnect';
+                    GhostText.closeConnection(tabId);
+                } else {
+                    message = 'select-and-connect';
+                }
                 chrome.tabs.sendMessage(tabId, {
-                    action: 'button-clicked',
+                    action: message,
                     tabId: tabId
                 });
             });
@@ -154,6 +161,7 @@ var GhostText = {
         }
 
         port.onMessage.addListener(function(msg) {
+                    console.log(msg);
             /** @type {string} The chrome tab id. */
             var tabId = msg.tabId;
 

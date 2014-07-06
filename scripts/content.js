@@ -53,21 +53,21 @@ var GhostTextContent = {
     },
 
     /**
-     * Handles messages sent from background.js
+     * Handles messages sent from other parts of the extension
      *
      * @param  {object} request The request object passed by Chrome
      */
     messageHandler: function (request) {
+        console.log('Got message:', request);
         if (!request || !request.action) {
             return;
         }
         switch (request.action) {
-            case 'button-clicked':
-                if (GhostTextContent.$connectedTextarea.length) {
-                    GhostTextContent.disconnectTextarea(request);
-                } else {
-                    GhostTextContent.tryToConnectTextarea(request);
-                }
+            case 'select-and-connect':
+                GhostTextContent.tryToConnectTextarea(request.tabId);
+                break;
+            case 'disconnect':
+                GhostTextContent.disconnectTextarea();
                 break;
         }
     },
@@ -80,22 +80,16 @@ var GhostTextContent = {
 
     /**
      * Disconnect textarea
-     *
-     * @param  {object} request The request object passed by Chrome
      */
-    disconnectTextarea: function (request) {
-
-        chrome.runtime.sendMessage({
-            action: 'close-connection',
-            tabId: request.tabId
-        });
-
+    disconnectTextarea: function () {
         //remove highlight from connected textarea
         GhostTextContent.$connectedTextarea.css({
             outline: ''
         });
 
-        GhostTextContent.$connectedTextarea.off('.ghost-text'); //remove all event listeners
+         //remove all event listeners
+        GhostTextContent.$connectedTextarea.off('.ghost-text');
+
         GhostTextContent.$connectedTextarea = $();
     },
 
@@ -103,24 +97,24 @@ var GhostTextContent = {
     /**
      * Look for textareas in document and connect to is as soon as possible
      *
-     * @param  {object} request The request object passed by Chrome
+     * @param {number} tabId The chrome tab id.
      */
-    tryToConnectTextarea: function (request) {
+    tryToConnectTextarea: function (tabId) {
 
         var connectTextarea = function (textarea) {
             GhostTextContent.$connectedTextarea = $('textarea');
 
             //open actual connection
-            GhostText.connectTextArea(GhostTextContent.$connectedTextarea, $('title').text(), request.tabId, window.location);
+            GhostText.connectTextArea(GhostTextContent.$connectedTextarea, $('title').text(), tabId, window.location);
 
             //close connection when the textarea is removed from the document
             GhostTextContent.$connectedTextarea.on('DOMNodeRemovedFromDocument', function () {
-                GhostTextContent.disconnectTextarea(request);
+                GhostTextContent.disconnectTextarea();
             });
 
             //close textarea when the tab is closed or reloaded
             window.addEventListener('beforeunload', function () {
-                GhostTextContent.disconnectTextarea(request);
+                GhostTextContent.disconnectTextarea();
             });
 
             //highlight selected textarea
