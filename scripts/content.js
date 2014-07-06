@@ -111,14 +111,16 @@ function openConnection (request) {
         $textareas = $focusedTextarea;
     }
     switch  ($textareas.length) {
-        case 0: alert('No textarea elements on this page'); break;
+        case 0: GhostTextContent.alertUser('No textarea elements on this page'); break;
         case 1: connectTextarea($textareas); break;
         default:
             var connectAndForgetTheRest = function () {
                 console.log('User focused:', this);
                 connectTextarea(this);
                 $textareas.off('.ghost-text');
+                GhostTextContent.hideMessages();
             };
+            GhostTextContent.informUser('There are multiple textareas on this page. <br> Click on the one you want to use.', true);
             $textareas.on('focus.ghost-text', connectAndForgetTheRest);
     }
 }
