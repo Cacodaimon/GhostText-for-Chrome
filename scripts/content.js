@@ -203,6 +203,9 @@ var GhostTextContent = {
         $textarea.css({
             outline: 'dashed 2px #f97e2e'
         });
+
+        //focus textarea (scrolls it into view if it was auto-selected)
+        textarea.focus();
     },
 
 
