@@ -108,7 +108,7 @@ var GhostTextContent = {
     disconnectTextarea: function () {
         //remove highlight from connected textarea
         GhostTextContent.$connectedTextarea.css({
-            outline: ''
+            boxShadow: ''
         });
 
          //remove all event listeners
@@ -203,7 +203,7 @@ var GhostTextContent = {
 
         //highlight selected textarea
         $textarea.css({
-            outline: 'dashed 2px #f97e2e'
+            boxShadow: '20px 20px #00adee'
         });
 
         //focus textarea (scrolls it into view if it was auto-selected)
