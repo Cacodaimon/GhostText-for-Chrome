@@ -22,6 +22,7 @@ var GhostTextContent = {
         console.info('GhostText:', message);
         GThumane.remove();
 
+        message = message.replace(/\n/g,'<br>');
         var timeout = stay ? 0 : GhostTextContent.getMessageDisplayTime(message);
         GThumane.log(message, {
             timeout: timeout,
@@ -39,6 +40,7 @@ var GhostTextContent = {
         console.warn('GhostText:', message);
         GThumane.remove();
 
+        message = message.replace(/\n/g,'<br>');
         var timeout = stay ? 0 : GhostTextContent.getMessageDisplayTime(message);
         GThumane.log(message, {
             timeout: timeout,
@@ -48,8 +50,6 @@ var GhostTextContent = {
     },
     /**
      * Hides any messages on screen
-     *
-     * @param  {string} message Message to display
      */
     hideMessages: function () {
         GThumane.remove();
@@ -87,6 +87,9 @@ var GhostTextContent = {
                 break;
             case 'disconnect':
                 GhostTextContent.disconnectTextarea();
+                break;
+            case 'notify':
+                GhostTextContent[request.isError ? 'alertUser' : 'informUser'](request.message, request.stay);
                 break;
         }
     },
@@ -139,7 +142,7 @@ var GhostTextContent = {
                     $textareas.off('.ghost-text');
                     GhostTextContent.hideMessages();
                 };
-                GhostTextContent.informUser('There are multiple textareas on this page. <br> Click on the one you want to use.', true);
+                GhostTextContent.informUser('There are multiple textareas on this page. \n Click on the one you want to use.', true);
                 $textareas.on('focus.ghost-text', connectAndForgetTheRest);
         }
     },

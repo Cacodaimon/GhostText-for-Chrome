@@ -192,16 +192,20 @@ var GhostText = {
         delete GhostText.connections[tabId];
         console.log('Connection: closed');
 
-        //inform tab that the connection was closed
-        chrome.tabs.sendMessage(tabId, {
-            action: 'disconnect',
-            tabId: tabId
-        });
+        try {
+            //inform tab that the connection was closed
+            chrome.tabs.sendMessage(tabId, {
+                action: 'disconnect',
+                tabId: tabId
+            });
 
-        chrome.browserAction.setBadgeText({
-            text: '',
-            tabId: tabId
-        });
+            chrome.browserAction.setBadgeText({
+                text: '',
+                tabId: tabId
+            });
+        } catch (e) {
+            //tab might have been closed already; don't know how to detect it first.
+        }
 
         return true;
     },
@@ -271,8 +275,8 @@ var GhostText = {
      * @static
      */
     errorHandler: function(e) {
-        if(e && (e.target && e.target.readyState === 3) || e.status === 404) {
-            alert('Connection error. Make sure that Sublime Text is open and has GhostText installed. Try closing and opening it and try again. Make sure that the port matches (4001 is the default). See if there are any errors in Sublime Text\'s console');
+        if(e && (e.target && e.target.readyState === 3) || e.status === 404 || e.status === 0) {
+            GhostText.notifyUser(true, 'Connection error. \n Make sure that Sublime Text is open and has GhostText installed. \n Try closing and opening it and try again. \n Make sure that the port matches (4001 is the default). \n See if there are any errors in Sublime Text\'s console');
         }
     },
 
@@ -288,7 +292,7 @@ var GhostText = {
             return true;
         }
 
-        alert(['Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion].join(' '));
+        GhostText.notifyUser(true, 'Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion);
 
         return false;
     },
@@ -308,4 +312,28 @@ var GhostText = {
                 break;
         }
     },
+
+    /**
+     * Pipe messages to the document thought content.js
+     *
+     * @param  {boolean} isError Whether it's an error message (optional)
+     * @param  {boolean} stay    Whether the message will stay on indefinitely (optional)
+     * @param  {string}  message Message to display
+     */
+    notifyUser: function () {
+        var msg = {};
+        if (typeof arguments[0] === 'boolean') {
+            msg.isError = [].shift.call(arguments);
+        }
+        if (typeof arguments[0] === 'boolean') {
+            msg.stay = [].shift.call(arguments);
+        }
+        msg.message = [].join.call(arguments, ' ');
+        msg.action = 'notify';
+
+        GhostText.inCurrentTab(function (tabId) {
+            msg.tabId = tabId;
+            chrome.tabs.sendMessage(tabId, msg);
+        });
+    }
 };
