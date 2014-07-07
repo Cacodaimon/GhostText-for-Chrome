@@ -86,14 +86,20 @@ var GhostText = {
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
             GhostText.inCurrentTab(function toggleConnection (tabId){
-                if (GhostText.connections[tabId]) {
-                    GhostText.closeConnection(tabId);
-                } else {
-                    chrome.tabs.sendMessage(tabId, {
-                        action: 'select-and-connect',
-                        tabId: tabId
+                chrome.tabs.executeScript(tabId, { file: 'vendor/jquery.min.js' }, function () {
+                    chrome.tabs.executeScript(tabId, { file: 'vendor/humane-ghosttext.min.js' }, function () {
+                        chrome.tabs.executeScript(tabId, { file: 'scripts/content.js' }, function () {
+                            if (GhostText.connections[tabId]) {
+                                GhostText.closeConnection(tabId);
+                            } else {
+                                chrome.tabs.sendMessage(tabId, {
+                                    action: 'select-and-connect',
+                                    tabId: tabId
+                                });
+                            }
+                        });
                     });
-                }
+                });
             });
         });
     },
