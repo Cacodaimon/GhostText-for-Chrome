@@ -2,6 +2,7 @@
 var GhostTextContent = {
     /**
      * This tab's ID
+     *
      * @type {Number}
      */
     tabId: null,
@@ -96,6 +97,7 @@ var GhostTextContent = {
 
     /**
      * The textarea we're connected to
+     *
      * @type {jQuery}
      */
     $connectedTextarea: $(),
@@ -187,7 +189,7 @@ var GhostTextContent = {
             var response = JSON.parse(msg.change);
             $textarea.val(response.text);
             /** @type {{start: {number}, end: {number}}} */
-            var minMaxSelection = GhostText.getMinMaxSelection(response.selections);
+            var minMaxSelection = GhostTextContent.getMinMaxSelection(response.selections);
             textarea.selectionStart = minMaxSelection.start;
             textarea.selectionEnd   = minMaxSelection.end;
             textarea.focus();
@@ -219,9 +221,67 @@ var GhostTextContent = {
         var title = $('title').text();
 
         GhostTextContent.port.postMessage({
-            change: GhostText.textChange(title, GhostTextContent.$connectedTextarea, location),
+            change: GhostTextContent.textChange(title, GhostTextContent.$connectedTextarea, location),
             tabId: GhostTextContent.tabId
         });
+    },
+
+
+    /**
+     * Packs the title an the textarea's value and cursor into a change request the GhostText server understands.
+     *
+     * @param {string}   title
+     * @param {jQuery}   textArea
+     * @param {object}   loc The tab's location object.
+     * @returns {string}
+     * @private
+     * @static
+     */
+    textChange: function(title, textArea, loc) {
+        var textAreaDom = $(this).get(0);
+
+        return JSON.stringify({
+                title:  title,
+                text:   textArea.val(),
+                selections: [{
+                    start: textAreaDom.selectionStart,
+                    end: textAreaDom.selectionEnd
+                }],
+                url: loc.host,
+                syntax: GhostTextContent.guessSyntax(loc)
+            });
+    },
+
+    /**
+     * Guesses the syntax by the given URL.
+     *
+     * @param {string} url The URL used for the syntax lookup.
+     * @returns {string} The guessed syntax name.
+     * @private
+     * @static
+     * @todo This is currently just a method stub!
+     */
+    guessSyntax: function(url) {
+        return 'plaintext';
+    },
+
+    /**
+     * Extracts the min and max selection cursor position from the given selection array.
+     *
+     * @param {[{start: {number}, end: {number}}]} selection The selection array to extract the min max values.
+     * @returns {{start: {number}, end: {number}}}
+     * @private
+     * @static
+     */
+    getMinMaxSelection: function(selection) {
+        var minMaxSelection = {start: Number.MAX_VALUE, end: Number.MIN_VALUE};
+
+        for (var i = selection.length - 1; i >= 0; i--) {
+            minMaxSelection.start = Math.min(minMaxSelection.start, selection[i].start);
+            minMaxSelection.end   = Math.max(minMaxSelection.end, selection[i].end);
+        }
+
+        return minMaxSelection;
     }
 };
 

@@ -9,7 +9,7 @@
   "description": "Connects a textarea to SublimeText.",
   "content_scripts": [{
         "matches": ["http://*/*", "https://*/*"],
-        "js": ["vendor/jquery.min.js", "vendor/humane-ghosttext.min.js", "scripts/lib.js", "scripts/content.js"],
+        "js": ["vendor/jquery.min.js", "vendor/humane-ghosttext.min.js", "scripts/content.js"],
         "css": ["vendor/humane-ghosttext.css"],
         "run_at": "document_end"
   }],

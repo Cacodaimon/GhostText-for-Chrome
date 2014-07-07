@@ -5,7 +5,7 @@
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
  *
- * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connectTextArea: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, textChange: Function, guessSyntax: Function, getMinMaxSelection: Function, errorHandler: Function, checkProtocolVersion: Function}}
+ * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, errorHandler: Function, checkProtocolVersion: Function}}
  */
 var GhostText = {
     /**
@@ -162,7 +162,7 @@ var GhostText = {
                         change: event.data
                     });
                 };
-            }).fail(function(e) { GhostText.errorHandler(e); });
+            }).fail(GhostText.errorHandler);
         });
     },
 
@@ -205,63 +205,6 @@ var GhostText = {
         }
 
         return true;
-    },
-
-    /**
-     * Packs the title an the textarea's value and cursor into a change request the GhostText server understands.
-     *
-     * @param {string}   title
-     * @param {jQuery}   textArea
-     * @param {object}   loc The tab's location object.
-     * @returns {string}
-     * @private
-     * @static
-     */
-    textChange: function(title, textArea, loc) {
-        var textAreaDom = $(this).get(0);
-
-        return JSON.stringify({
-                title:  title,
-                text:   textArea.val(),
-                selections: [{
-                    start: textAreaDom.selectionStart,
-                    end: textAreaDom.selectionEnd
-                }],
-                url: loc.host,
-                syntax: GhostText.guessSyntax(loc)
-            });
-    },
-
-    /**
-     * Guesses the syntax by the given URL.
-     *
-     * @param {string} url The URL used for the syntax lookup.
-     * @returns {string} The guessed syntax name.
-     * @private
-     * @static
-     * @todo This is currently just a method stub!
-     */
-    guessSyntax: function(url) {
-        return 'plaintext';
-    },
-
-    /**
-     * Extracts the min and max selection cursor position from the given selection array.
-     *
-     * @param {[{start: {number}, end: {number}}]} selection The selection array to extract the min max values.
-     * @returns {{start: {number}, end: {number}}}
-     * @private
-     * @static
-     */
-    getMinMaxSelection: function(selection) {
-        var minMaxSelection = {start: Number.MAX_VALUE, end: Number.MIN_VALUE};
-
-        for (var i = selection.length - 1; i >= 0; i--) {
-            minMaxSelection.start = Math.min(minMaxSelection.start, selection[i].start);
-            minMaxSelection.end   = Math.max(minMaxSelection.end, selection[i].end);
-        }
-
-        return minMaxSelection;
     },
 
     /**
