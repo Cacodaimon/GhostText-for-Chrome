@@ -1,31 +1,33 @@
 {
-  "name": "GhostText",
-  "icons": {
-    "16": "icon/16.png",
-    "32": "icon/32.png"
-  },
-  "version": "0.1",
-  "manifest_version": 2,
-  "description": "Connects a textarea to SublimeText.",
-  "content_scripts": [{
+    "manifest_version": 2,
+    "name": "GhostText",
+    "description": "Connects a textarea to a GhostText-enabled text editor (like Sublime Text).",
+    "version": "1.0",
+    "author": "Guido Krömer, Federico Brigante",
+    "icons": {
+        "19": "images/logo_19.png",
+        "48": "images/logo_48.png",
+        "128": "images/logo_128.png"
+    },
+    "permissions": [
+        "tabs","<all_urls>"
+    ],
+    "options_page": "options.html",
+    "browser_action": {
+        "default_title": "GhostText",
+        "default_icon":  "images/logo_19.png"
+    },
+    "content_scripts": [{
         "matches": ["http://*/*", "https://*/*"],
         "js": ["vendor/jquery.min.js", "vendor/humane-ghosttext.min.js", "scripts/content.js"],
         "css": ["vendor/humane-ghosttext.css"],
         "run_at": "document_end"
-  }],
-  "background": {
-    "scripts": [
-      "vendor/jquery.min.js",
-      "scripts/lib.js",
-      "scripts/background.js"
-    ]
-  },
-  "permissions": [
-    "tabs","<all_urls>"
-    ],
-  "options_page": "options.html",
-  "browser_action": {
-    "default_title": "GhostText",
-    "default_icon":  "icon/32.png"
-  }
+    }],
+    "background": {
+        "scripts": [
+            "vendor/jquery.min.js",
+            "scripts/lib.js",
+            "scripts/background.js"
+        ]
+    }
 }
