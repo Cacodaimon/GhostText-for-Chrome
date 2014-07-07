@@ -86,17 +86,14 @@ var GhostText = {
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
             GhostText.inCurrentTab(function toggleConnection (tabId){
-                var message;
                 if (GhostText.connections[tabId]) {
-                    message = 'disconnect';
                     GhostText.closeConnection(tabId);
                 } else {
-                    message = 'select-and-connect';
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'select-and-connect',
+                        tabId: tabId
+                    });
                 }
-                chrome.tabs.sendMessage(tabId, {
-                    action: message,
-                    tabId: tabId
-                });
             });
         });
     },
@@ -138,7 +135,7 @@ var GhostText = {
 
                 GhostText.connections[tabId].onopen = function () {
                     chrome.browserAction.setBadgeText({
-                        text: '✓',
+                        text: /linux/i.test(navigator.userAgent)?'OK':'✓',
                         tabId: tabId
                     });
                     chrome.browserAction.setBadgeBackgroundColor({
