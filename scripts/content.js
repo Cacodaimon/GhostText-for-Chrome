@@ -1,5 +1,12 @@
 'use strict';
 
+/**
+ * GhostText for Chrome content script.
+ *
+ * @licence The MIT License (MIT)
+ * @author Guido Krömer <mail 64 cacodaemon 46 de>
+ * @author Federico Brigante
+ */
 var GhostTextContent = {
     /**
      * This tab's ID

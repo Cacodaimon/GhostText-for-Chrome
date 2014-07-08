@@ -4,7 +4,7 @@
  *
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
- * @author
+ * @author Federico Brigante
  */
 var GhostText = {
     /**
