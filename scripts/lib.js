@@ -10,8 +10,17 @@ var GhostText = {
     /**
      * @type {number} The GhostText protocol version.
      * @private
+     * @const
      */
     protocolVersion: 1,
+
+    /**
+     * Chrome tab id to WebSocket mapping.
+     * @type {Array<WebSocket>}
+     * @private
+     * @static
+     */
+    connections: {},
 
     /**
      * Call the callback with the current tab id (async)
@@ -42,14 +51,6 @@ var GhostText = {
 
         localStorage.setItem('server-port-v1', port);
     },
-
-    /**
-     * Chrome tab id to WebSocket mapping.
-     * @type {Array<WebSocket>}
-     * @private
-     * @static
-     */
-    connections: {},
 
     /**
      * Make sure that content scripts and styles are only loaded once
