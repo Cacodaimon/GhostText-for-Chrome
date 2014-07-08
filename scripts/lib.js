@@ -72,6 +72,22 @@ var GhostText = {
      */
     connections: {},
 
+    tabsWithContentJs: [],
+
+    loadContentJs: function (tabId, callback) {
+        //only do it if it hadn't already loaded
+        if (GhostText.tabsWithContentJs.indexOf(tabId) < 0 ) {
+            GhostText.tabsWithContentJs.push(tabId);//remember for next time
+
+            chrome.tabs.insertCSS(tabId,     { file: 'vendor/humane-ghosttext.css' });
+            chrome.tabs.executeScript(tabId, { file: 'vendor/jquery.min.js' });
+            chrome.tabs.executeScript(tabId, { file: 'vendor/humane-ghosttext.min.js' });
+            chrome.tabs.executeScript(tabId, { file: 'scripts/content.js' }, callback);
+        } else {
+            callback();
+        }
+    },
+
     /**
      * Handles incoming connections from the content script.
      * Has to be started in the background script.
@@ -86,14 +102,16 @@ var GhostText = {
         //inform the content script that the button has been clicked
         chrome.browserAction.onClicked.addListener(function () {
             GhostText.inCurrentTab(function toggleConnection (tabId){
-                if (GhostText.connections[tabId]) {
-                    GhostText.closeConnection(tabId);
-                } else {
-                    chrome.tabs.sendMessage(tabId, {
-                        action: 'select-and-connect',
-                        tabId: tabId
-                    });
-                }
+                GhostText.loadContentJs(tabId, function () {
+                    if (GhostText.connections[tabId]) {
+                        GhostText.closeConnection(tabId);
+                    } else {
+                        chrome.tabs.sendMessage(tabId, {
+                            action: 'select-and-connect',
+                            tabId: tabId
+                        });
+                    }
+                });
             });
         });
     },
