@@ -142,7 +142,6 @@ var GhostTextContent = {
                     console.log('User focused:', this);
                     GhostTextContent.connectTextarea(this);
                     $textareas.off('.ghost-text');
-                    GhostTextContent.hideMessages();
                 };
                 GhostTextContent.informUser('There are multiple textareas on this page. \n Click on the one you want to use.', true);
                 $textareas.on('focus.ghost-text', connectAndForgetTheRest);
@@ -208,6 +207,9 @@ var GhostTextContent = {
 
         //focus textarea (scrolls it into view if it was auto-selected)
         textarea.focus();
+
+        //hide all messages (instructions and errors)
+        GhostTextContent.hideMessages();
     },
 
 
