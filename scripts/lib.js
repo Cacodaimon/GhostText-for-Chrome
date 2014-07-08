@@ -14,27 +14,6 @@ var GhostText = {
     protocolVersion: 1,
 
     /**
-     * Opens or activates a tab specified by its url.
-     *
-     * @param {string} url The tab's URL.
-     * @public
-     * @static
-     * @todo Not needed anymore?
-     */
-    openTab: function(url) {
-        /** @type {string} The sanitized URL. */
-        var optionsUrl = chrome.extension.getURL(url);
-
-        chrome.tabs.query({url: optionsUrl}, function(tabs) {
-            if (tabs.length) {
-                chrome.tabs.update(tabs[0].id, {active: true});
-            } else {
-                chrome.tabs.create({url: optionsUrl});
-            }
-        });
-    },
-
-    /**
      * Call the callback with the current tab id (async)
      *
      * @param  {function} callback The function to call with the id
