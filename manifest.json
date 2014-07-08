@@ -11,19 +11,13 @@
         "128": "images/logo_128.png"
     },
     "permissions": [
-        "activeTab"
+        "activeTab", "http://localhost/"
     ],
     "options_page": "options.html",
     "browser_action": {
         "default_title": "GhostText",
         "default_icon":  "images/logo_19.png"
     },
-    "content_scripts": [{
-        "matches": ["http://*/*", "https://*/*"],
-        "js": ["vendor/jquery.min.js", "vendor/humane-ghosttext.min.js", "scripts/content.js"],
-        "css": ["vendor/humane-ghosttext.css"],
-        "run_at": "document_end"
-    }],
     "background": {
         "scripts": [
             "vendor/jquery.min.js",
