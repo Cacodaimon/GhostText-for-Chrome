@@ -211,6 +211,8 @@ var GhostTextContent = {
 
         //hide all messages (instructions and errors)
         GhostTextContent.hideMessages();
+
+        GhostTextContent.informUser('Connected! You can switch to your editor');
     },
 
 
