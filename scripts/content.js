@@ -202,6 +202,7 @@ var GhostTextContent = {
 
         //highlight selected textarea
         $textarea.css({
+            // transition: 'box-shadow 1s cubic-bezier(.25,2,.5,1)', //This would have looked nice (http://i.imgur.com/B170pRA.gif), but it leaves some dirty pixels very often, so I disabled it
             boxShadow: '20px 20px #00adee'
         });
 
