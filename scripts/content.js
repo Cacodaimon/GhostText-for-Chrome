@@ -243,7 +243,7 @@ var GhostTextContent = {
      * @static
      */
     textChange: function(title, textArea, loc) {
-        var textAreaDom = $(this).get(0);
+        var textAreaDom = textArea.get(0);
 
         return JSON.stringify({
                 title:  title,
