@@ -4,8 +4,7 @@
  *
  * @licence The MIT License (MIT)
  * @author Guido Krömer <mail 64 cacodaemon 46 de>
- *
- * @type {{protocolVersion: number, openTab: Function, serverPort: Function, connections: {}, connectionHandler: Function, connectionHandlerOnConnect: Function, closeConnection: Function, errorHandler: Function, checkProtocolVersion: Function}}
+ * @author
  */
 var GhostText = {
     /**
@@ -20,6 +19,7 @@ var GhostText = {
      * @param {string} url The tab's URL.
      * @public
      * @static
+     * @todo Not needed anymore?
      */
     openTab: function(url) {
         /** @type {string} The sanitized URL. */
@@ -76,7 +76,7 @@ var GhostText = {
      * Make sure that content scripts and styles are only loaded once
      *
      * @param  {number}   tabId    The tab in which to inject the content scripts
-     * @param  {function} callback The funcion to call after the scripts have been loaded
+     * @param  {function} callback The function to call after the scripts have been loaded
      */
     loadContentJs: function (tabId, callback) {
         chrome.tabs.executeScript(tabId, {
@@ -212,8 +212,7 @@ var GhostText = {
         delete GhostText.connections[tabId];
         console.log('Connection: closed');
 
-        try {
-            //inform tab that the connection was closed
+        try { //inform tab that the connection was closed
             chrome.tabs.sendMessage(tabId, {
                 action: 'disconnect',
                 tabId: tabId
@@ -239,7 +238,11 @@ var GhostText = {
      */
     errorHandler: function(e) {
         if(e && (e.target && e.target.readyState === 3) || e.status === 404 || e.status === 0) {
-            GhostText.notifyUser(true, 'Connection error. \n Make sure that Sublime Text is open and has GhostText installed. \n Try closing and opening it and try again. \n Make sure that the port matches (4001 is the default). \n See if there are any errors in Sublime Text\'s console');
+            GhostText.notifyUser(true, [
+                'Connection error. \n Make sure that Sublime Text is open and has GhostText installed.',
+                '\nTry closing and opening it and try again. \n Make sure that the port matches (4001 is the default).',
+                '\n See if there are any errors in Sublime Text\'s console'
+            ]);
         }
     },
 
@@ -255,7 +258,11 @@ var GhostText = {
             return true;
         }
 
-        GhostText.notifyUser(true, 'Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion);
+        GhostText.notifyUser(true, [
+            'Can\'t connect to this GhostText server, the server\'s protocol version is',
+            version, 'the client\'s protocol version is:',
+            GhostText.protocolVersion
+        ]);
 
         return false;
     },
@@ -278,25 +285,21 @@ var GhostText = {
 
     /**
      * Pipe messages to the document thought content.js
+     * The provided message can be a simple string or an array of string which will be joined internally.
      *
-     * @param  {boolean} isError Whether it's an error message (optional)
-     * @param  {boolean} stay    Whether the message will stay on indefinitely (optional)
-     * @param  {string}  message Message to display
+     * @param {boolean} isError Whether it's an error message
+     * @param {string|Array<string>} message The message to display.
+     * @private
+     * @static
      */
-    notifyUser: function () {
-        var msg = {};
-        if (typeof arguments[0] === 'boolean') {
-            msg.isError = [].shift.call(arguments);
-        }
-        if (typeof arguments[0] === 'boolean') {
-            msg.stay = [].shift.call(arguments);
-        }
-        msg.message = [].join.call(arguments, ' ');
-        msg.action = 'notify';
-
+    notifyUser: function (isError, message) {
         GhostText.inCurrentTab(function (tabId) {
             msg.tabId = tabId;
-            chrome.tabs.sendMessage(tabId, msg);
+            chrome.tabs.sendMessage(tabId, {
+                    action: 'notify',
+                    isError: isError,
+                    message: typeof message === 'array' ? message.join(' ') : message
+            });
         });
     }
 };
