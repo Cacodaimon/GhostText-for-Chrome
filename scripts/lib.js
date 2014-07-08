@@ -72,20 +72,25 @@ var GhostText = {
      */
     connections: {},
 
-    tabsWithContentJs: [],
-
+    /**
+     * Make sure that content scripts and styles are only loaded once
+     *
+     * @param  {number}   tabId    The tab in which to inject the content scripts
+     * @param  {function} callback The funcion to call after the scripts have been loaded
+     */
     loadContentJs: function (tabId, callback) {
-        //only do it if it hadn't already loaded
-        if (GhostText.tabsWithContentJs.indexOf(tabId) < 0 ) {
-            GhostText.tabsWithContentJs.push(tabId);//remember for next time
-
-            chrome.tabs.insertCSS(tabId,     { file: 'vendor/humane-ghosttext.css' });
-            chrome.tabs.executeScript(tabId, { file: 'vendor/jquery.min.js' });
-            chrome.tabs.executeScript(tabId, { file: 'vendor/humane-ghosttext.min.js' });
-            chrome.tabs.executeScript(tabId, { file: 'scripts/content.js' }, callback);
-        } else {
-            callback();
-        }
+        chrome.tabs.executeScript(tabId, {
+            code: '!!window.GhostTextContent'//check if it's already loaded
+        }, function (hasContentJs) {
+            if (hasContentJs[0]) {
+                callback();
+            } else {
+                chrome.tabs.insertCSS(tabId,     { file: 'vendor/humane-ghosttext.css' });
+                chrome.tabs.executeScript(tabId, { file: 'vendor/jquery.min.js' });
+                chrome.tabs.executeScript(tabId, { file: 'vendor/humane-ghosttext.min.js' });
+                chrome.tabs.executeScript(tabId, { file: 'scripts/content.js' }, callback);
+            }
+        });
     },
 
     /**
