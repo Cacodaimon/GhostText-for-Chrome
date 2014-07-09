@@ -218,11 +218,13 @@ var GhostText = {
      */
     errorHandler: function(e) {
         if(e && (e.target && e.target.readyState === 3) || e.status === 404 || e.status === 0) {
-            GhostText.notifyUser(true, [
-                'Connection error. \n Make sure that Sublime Text is open and has GhostText installed.',
-                '\nTry closing and opening it and try again. \n Make sure that the port matches (4001 is the default).',
-                '\n See if there are any errors in Sublime Text\'s console'
-            ]);
+            GhostText.notifyUser(true,
+                'Connection error.',
+                '\nMake sure that Sublime Text is open and has GhostText installed.',
+                '\nTry closing and opening it and try again.',
+                '\nMake sure that the port matches (4001 is the default).',
+                '\nSee if there are any errors in Sublime Text\'s console.'
+            );
         }
     },
 
@@ -238,11 +240,7 @@ var GhostText = {
             return true;
         }
 
-        GhostText.notifyUser(true, [
-            'Can\'t connect to this GhostText server, the server\'s protocol version is',
-            version, 'the client\'s protocol version is:',
-            GhostText.protocolVersion
-        ]);
+        GhostText.notifyUser(true, 'Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion);
 
         return false;
     },
@@ -265,21 +263,27 @@ var GhostText = {
 
     /**
      * Pipe messages to the document thought content.js
-     * The provided message can be a simple string or an array of string which will be joined internally.
+     * After the first booleans, you can pass multiple variables like with console.log
      *
-     * @param {boolean} isError Whether it's an error message
-     * @param {string|Array<string>} message The message to display.
-     * @private
+     * @param  {boolean}        isError    Whether it's an error message (optional)
+     * @param  {boolean}        stay       Whether the message will stay on indefinitely (optional)
+     * @param  {string|number}  message... Messages to display
      * @static
      */
-    notifyUser: function (isError, message) {
+    notifyUser: function () {
+        var msg = {};
+        if (typeof arguments[0] === 'boolean') {
+            msg.isError = [].shift.call(arguments);
+        }
+        if (typeof arguments[0] === 'boolean') {
+            msg.stay = [].shift.call(arguments);
+        }
+        msg.message = [].join.call(arguments, ' ');
+        msg.action = 'notify';
+
         GhostText.inCurrentTab(function (tabId) {
             msg.tabId = tabId;
-            chrome.tabs.sendMessage(tabId, {
-                    action: 'notify',
-                    isError: isError,
-                    message: typeof message === 'array' ? message.join(' ') : message
-            });
+            chrome.tabs.sendMessage(tabId, msg);
         });
     }
 };
