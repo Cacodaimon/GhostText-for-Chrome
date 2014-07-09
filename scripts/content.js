@@ -249,7 +249,7 @@ var GhostTextContent = {
                 end: textArea.selectionEnd
             }],
             url: location.host,
-            syntax: GhostTextContent.guessSyntax(location)
+            syntax: GhostTextContent.guessSyntax()
         });
 
         GhostTextContent.port.postMessage({
@@ -261,13 +261,12 @@ var GhostTextContent = {
     /**
      * Guesses the syntax by the given URL.
      *
-     * @param {object}   loc The tab's location object.
      * @returns {string} The guessed syntax name.
      * @private
      * @static
      * @todo This is currently just a method stub!
      */
-    guessSyntax: function(loc) {
+    guessSyntax: function() {
         return null;
     },
 
