@@ -188,7 +188,7 @@ var GhostTextContent = {
 
         //Send content of text area now and when it changes
         GhostTextContent.sendTextToBackground();
-        $textArea.on('input.ghost-text propertychange.ghost-text onmouseup.ghost-text', GhostTextContent.sendTextToBackground);
+        $textArea.on('input.ghost-text', GhostTextContent.sendTextToBackground);
 
         /**
          * Receive messages from background.js
