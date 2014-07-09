@@ -203,7 +203,6 @@ var GhostTextContent = {
     /**
      * Connects a HTML text area to a GhostText server by messaging through the background script
      *
-     * @param {element} textArea The HTML textarea element to connect.
      * @public
      * @static
      */
