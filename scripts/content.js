@@ -188,7 +188,11 @@ var GhostTextContent = {
 
         //Send content of text area now and when it changes
         GhostTextContent.sendTextToBackground();
-        $textArea.on('input.ghost-text', GhostTextContent.sendTextToBackground);
+        $textArea.on('input.ghost-text', function (e) {
+            if (!e.originalEvent.detail || !e.originalEvent.detail.generatedByGhostText) {
+                GhostTextContent.sendTextToBackground();
+            }
+        });
 
         /**
          * Receive messages from background.js
@@ -203,11 +207,16 @@ var GhostTextContent = {
             /** @type {{text: {string}, selections: [{start: {number}, end: {number}}]}} */
             var response = JSON.parse(msg.change);
             $textArea.val(response.text);
+
             /** @type {{start: {number}, end: {number}}} */
             var minMaxSelection = GhostTextContent.getMinMaxSelection(response.selections);
             textArea.selectionStart = minMaxSelection.start;
             textArea.selectionEnd   = minMaxSelection.end;
             textArea.focus();
+
+            //fake event to allow sites like StackOverflow to detect the change and update the live preview
+            var evt = new CustomEvent('input', {detail: {generatedByGhostText: true}});
+            textArea.dispatchEvent(evt);
         });
 
         //close connection when the text area is removed from the document

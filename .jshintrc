@@ -29,6 +29,7 @@
         "chrome",
         "localStorage",
         "WebSocket",
+        "CustomEvent",
 
         "jQuery",
         "$",
