@@ -171,15 +171,15 @@ var GhostTextContent = {
     /**
      * Connects a HTML text area to a GhostText server by messaging through the background script
      *
-     * @param {jQuery} $textArea The HTML text area element to connect.
-     * @private
+     * @param {element} textArea The HTML textarea element to connect.
+     * @public
      * @static
      */
-    connectTextArea: function ($textArea) {
-        GhostTextContent.$connectedTextArea = $textArea;
+    connectTextArea: function (textArea) {
+        var $textArea = GhostTextContent.$connectedTextArea = $(textArea);
 
         /** @type {HTMLTextAreaElement} */
-        var textAreaDom = $textArea.get(0);
+        textArea = $textArea.get(0);
 
         //On the first connection, setup the port
         if(!GhostTextContent.port) {
@@ -205,9 +205,9 @@ var GhostTextContent = {
             $textArea.val(response.text);
             /** @type {{start: {number}, end: {number}}} */
             var minMaxSelection = GhostTextContent.getMinMaxSelection(response.selections);
-            textAreaDom.selectionStart = minMaxSelection.start;
-            textAreaDom.selectionEnd   = minMaxSelection.end;
-            textAreaDom.focus();
+            textArea.selectionStart = minMaxSelection.start;
+            textArea.selectionEnd   = minMaxSelection.end;
+            textArea.focus();
         });
 
         //close connection when the text area is removed from the document
@@ -223,7 +223,7 @@ var GhostTextContent = {
         });
 
         //focus text area (scrolls it into view if it was auto-selected)
-        textAreaDom.focus();
+        textArea.focus();
 
         //hide all messages (instructions and errors)
         GhostTextContent.hideMessages();
@@ -258,14 +258,14 @@ var GhostTextContent = {
      */
     textChange: function(title, $textArea, loc) {
         /** @type HTMLTextAreaElement */
-        var textAreaDom = $textArea.get(0);
+        var textArea = $textArea.get(0);
 
         return JSON.stringify({
                 title:  title,
                 text:   $textArea.val(),
                 selections: [{
-                    start: textAreaDom.selectionStart,
-                    end: textAreaDom.selectionEnd
+                    start: textArea.selectionStart,
+                    end: textArea.selectionEnd
                 }],
                 url: loc.host,
                 syntax: GhostTextContent.guessSyntax(loc)
