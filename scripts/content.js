@@ -52,7 +52,14 @@ var GhostTextContent = {
                 GhostTextContent.disconnectTextArea();
                 break;
             case 'notify':
-                GhostTextContent[request.isError ? 'alertUser' : 'informUser'](request.message, request.stay);
+                switch(request.type) {
+                    case 'error':
+                        GhostTextContent.alertUser(request.message, request.stay);
+                        break;
+                    default: /*we might support more types eventually, like success! */
+                        GhostTextContent.informUser(request.message, request.stay);
+                        break;
+                }
                 break;
         }
     },

@@ -218,7 +218,7 @@ var GhostText = {
      */
     errorHandler: function(e) {
         if(e && (e.target && e.target.readyState === 3) || e.status === 404 || e.status === 0) {
-            GhostText.notifyUser(true,
+            GhostText.notifyUser('error',
                 'Connection error.',
                 '\nMake sure that Sublime Text is open and has GhostText installed.',
                 '\nTry closing and opening it and try again.',
@@ -240,7 +240,7 @@ var GhostText = {
             return true;
         }
 
-        GhostText.notifyUser(true, 'Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion);
+        GhostText.notifyUser('error', 'Can\'t connect to this GhostText server, the server\'s protocol version is', version, 'the client\'s protocol version is:', GhostText.protocolVersion);
 
         return false;
     },
@@ -263,27 +263,20 @@ var GhostText = {
 
     /**
      * Pipe messages to the document thought content.js
-     * After the first booleans, you can pass multiple variables like with console.log
      *
-     * @param  {boolean}        isError    Whether it's an error message (optional)
-     * @param  {boolean}        stay       Whether the message will stay on indefinitely (optional)
-     * @param  {string|number}  message... Messages to display
+     * @param  {string}              type      The type of message: error|info
+     * @param  {...(number|string)}  [message]   Message to display
      * @static
      */
-    notifyUser: function () {
-        var msg = {};
-        if (typeof arguments[0] === 'boolean') {
-            msg.isError = [].shift.call(arguments);
-        }
-        if (typeof arguments[0] === 'boolean') {
-            msg.stay = [].shift.call(arguments);
-        }
-        msg.message = [].join.call(arguments, ' ');
-        msg.action = 'notify';
-
+    notifyUser: function (type) {
+        var message = [].slice.call(arguments, 1).join(' ');//get the rest parameters and join them
         GhostText.inCurrentTab(function (tabId) {
-            msg.tabId = tabId;
-            chrome.tabs.sendMessage(tabId, msg);
+            chrome.tabs.sendMessage(tabId, {
+                tabId: tabId,
+                type: type,
+                action: 'notify',
+                message: message
+            });
         });
     }
 };
