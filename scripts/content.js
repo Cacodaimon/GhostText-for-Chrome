@@ -111,6 +111,7 @@ var GhostTextContent = {
      * @static
      */
     hideMessages: function () {
+        console.log('GhostText: Hiding messages');
         GThumane.remove();
     },
 
@@ -142,6 +143,8 @@ var GhostTextContent = {
         window.removeEventListener('beforeunload', GhostTextContent.disconnectTextArea);
 
         GhostTextContent.$connectedTextArea = $();
+
+        GhostTextContent.informUser('Disconnected! \n <a href="https://github.com/Cacodaimon/GhostTextForChrome/issues?state=open" target="_blank">Report issues</a> | <a href="https://chrome.google.com/webstore/detail/sublimetextarea/godiecgffnchndlihlpaajjcplehddca/reviews" target="_blank">Leave review</a>');
     },
 
     /**
