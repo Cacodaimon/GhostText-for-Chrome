@@ -92,7 +92,7 @@ var GhostText = {
                         GhostText.closeConnection(tabId);
                     } else {
                         chrome.tabs.sendMessage(tabId, {
-                            action: 'select-and-connect',
+                            action: 'select-field',
                             tabId: tabId
                         });
                     }
@@ -147,6 +147,11 @@ var GhostText = {
                     });
                     GhostText.connections[tabId].send(msg.change);
                     console.log('Connection: opened');
+
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'connect',
+                        tabId: tabId
+                    });
                 };
 
                 GhostText.connections[tabId].onclose = function () {
