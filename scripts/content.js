@@ -237,39 +237,25 @@ var GhostTextContent = {
      * @static
      */
     sendTextToBackground: function () {
-        /** @type {string} */
-        var title = $('title').text();
+        /** @type HTMLTextAreaElement */
+        var textArea = GhostTextContent.$connectedTextArea.get(0);
+
+        //Pack the title an the text area's value and cursor into a change request the GhostText server understands
+        var change = JSON.stringify({
+            title:  $('title').text(),
+            text:   GhostTextContent.$connectedTextArea.val(),
+            selections: [{
+                start: textArea.selectionStart,
+                end: textArea.selectionEnd
+            }],
+            url: location.host,
+            syntax: GhostTextContent.guessSyntax(location)
+        });
 
         GhostTextContent.port.postMessage({
-            change: GhostTextContent.textChange(title, GhostTextContent.$connectedTextArea, location),
+            change: change,
             tabId: GhostTextContent.tabId
         });
-    },
-
-    /**
-     * Packs the title an the text area's value and cursor into a change request the GhostText server understands.
-     *
-     * @param {string}   title
-     * @param {jQuery}   $textArea
-     * @param {object}   loc The tab's location object.
-     * @returns {string}
-     * @private
-     * @static
-     */
-    textChange: function(title, $textArea, loc) {
-        /** @type HTMLTextAreaElement */
-        var textArea = $textArea.get(0);
-
-        return JSON.stringify({
-                title:  title,
-                text:   $textArea.val(),
-                selections: [{
-                    start: textArea.selectionStart,
-                    end: textArea.selectionEnd
-                }],
-                url: loc.host,
-                syntax: GhostTextContent.guessSyntax(loc)
-            });
     },
 
     /**
