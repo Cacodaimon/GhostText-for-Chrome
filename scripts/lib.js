@@ -273,8 +273,8 @@ var GhostText = {
      * @param  {...(number|string)}  [message]   Message to display
      * @static
      */
-    notifyUser: function (type) {
-        var message = [].slice.call(arguments, 1).join(' ');//get the rest parameters and join them
+    notifyUser: function (type, message) {
+        message = [].slice.call(arguments, 1).join(' ');//get the rest parameters and join them
         GhostText.inCurrentTab(function (tabId) {
             chrome.tabs.sendMessage(tabId, {
                 tabId: tabId,
