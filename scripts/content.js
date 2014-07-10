@@ -167,7 +167,7 @@ var GhostTextContent = {
         }
         switch  ($textAreas.length) {
             case 0:
-                GhostTextContent.alertUser('No <text area elements on this page');
+                GhostTextContent.alertUser('No text area elements on this page');
                 break;
             case 1:
                 GhostTextContent.reportFieldSelection($textAreas);
