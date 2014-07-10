@@ -149,7 +149,7 @@ var GhostText = {
                     console.log('Connection: opened');
 
                     chrome.tabs.sendMessage(tabId, {
-                        action: 'connect',
+                        action: 'enable-field',
                         tabId: tabId
                     });
                 };
@@ -199,7 +199,7 @@ var GhostText = {
 
         try { //inform tab that the connection was closed
             chrome.tabs.sendMessage(tabId, {
-                action: 'disconnect',
+                action: 'disable-field',
                 tabId: tabId
             });
 

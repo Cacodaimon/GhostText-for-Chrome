@@ -48,11 +48,11 @@ var GhostTextContent = {
             case 'select-field':
                 GhostTextContent.selectField();
                 break;
-            case 'connect':
-                GhostTextContent.connectTextArea();
+            case 'enable-field':
+                GhostTextContent.enableField();
                 break;
-            case 'disconnect':
-                GhostTextContent.disconnectTextArea();
+            case 'disable-field':
+                GhostTextContent.disableField();
                 break;
             case 'notify':
                 switch(request.type) {
@@ -131,11 +131,11 @@ var GhostTextContent = {
     },
 
     /**
-     * Disconnect text area.
+     * Remove listeners from field and shows disconnection message
      * @private
      * @static
      */
-    disconnectTextArea: function () {
+    disableField: function () {
         //remove highlight from connected text area
         GhostTextContent.$selectedField.css({
             boxShadow: ''
@@ -196,8 +196,8 @@ var GhostTextContent = {
             GhostTextContent.port = chrome.runtime.connect({name: 'GhostText'});
         }
 
-        //Send content of text area
-        GhostTextContent.sendTextToBackground();
+        //Report initial content of field
+        GhostTextContent.reportFieldData();
     },
 
     /**
@@ -206,7 +206,7 @@ var GhostTextContent = {
      * @public
      * @static
      */
-    connectTextArea: function () {
+    enableField: function () {
         var $textArea = GhostTextContent.$selectedField;
 
         /** @type {HTMLTextAreaElement} */
@@ -215,7 +215,7 @@ var GhostTextContent = {
         //Send content of text area when it changes
         $textArea.on('input.ghost-text', function (e) {
             if (!e.originalEvent.detail || !e.originalEvent.detail.generatedByGhostText) {
-                GhostTextContent.sendTextToBackground();
+                GhostTextContent.reportFieldData();
             }
         });
 
@@ -224,24 +224,14 @@ var GhostTextContent = {
          *
          * @param  {object} msg The message received
          */
-        GhostTextContent.port.onMessage.addListener(function(msg) {
+        GhostTextContent.port.onMessage.addListener(function (msg) {
             if (msg.tabId !== GhostTextContent.tabId) {
                 return;
             }
-
             /** @type {{text: {string}, selections: [{start: {number}, end: {number}}]}} */
             var response = JSON.parse(msg.change);
-            $textArea.val(response.text);
 
-            /** @type {{start: {number}, end: {number}}} */
-            var minMaxSelection = GhostTextContent.getMinMaxSelection(response.selections);
-            textArea.selectionStart = minMaxSelection.start;
-            textArea.selectionEnd   = minMaxSelection.end;
-            textArea.focus();
-
-            //fake event to allow sites like StackOverflow to detect the change and update the live preview
-            var evt = new CustomEvent('input', {detail: {generatedByGhostText: true}});
-            textArea.dispatchEvent(evt);
+            GhostTextContent.updateFieldData(response);
         });
 
         //close connection when the text area is removed from the document
@@ -270,7 +260,7 @@ var GhostTextContent = {
      * @private
      * @static
      */
-    sendTextToBackground: function () {
+    reportFieldData: function () {
         /** @type HTMLTextAreaElement */
         var textArea = GhostTextContent.$selectedField.get(0);
 
@@ -290,6 +280,30 @@ var GhostTextContent = {
             change: change,
             tabId: GhostTextContent.tabId
         });
+    },
+
+    /**
+     * Updates content of the field with what was received
+     *
+     * @param  {object} data  The new text and selection details
+     * @private
+     * @static
+     */
+    updateFieldData: function(data) {
+        /** @type HTMLTextAreaElement */
+        var textArea = GhostTextContent.$selectedField.get(0);
+
+        GhostTextContent.$selectedField.val(data.text);
+
+        /** @type {{start: {number}, end: {number}}} */
+        var minMaxSelection = GhostTextContent.getMinMaxSelection(data.selections);
+        textArea.selectionStart = minMaxSelection.start;
+        textArea.selectionEnd   = minMaxSelection.end;
+        textArea.focus();
+
+        //fake event to allow sites like StackOverflow to detect the change and update the live preview
+        var evt = new CustomEvent('input', {detail: {generatedByGhostText: true}});
+        textArea.dispatchEvent(evt);
     },
 
     /**
