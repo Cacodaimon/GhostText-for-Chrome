@@ -143,7 +143,7 @@ var GhostTextContent = {
 
          //remove all event listeners
         GhostTextContent.$selectedField.off('.ghost-text');
-        window.removeEventListener('beforeunload', GhostTextContent.disconnectTextArea);
+        window.removeEventListener('beforeunload', GhostTextContent.requestServerDisconnection);
 
         GhostTextContent.$selectedField = $();
 
@@ -245,10 +245,10 @@ var GhostTextContent = {
         });
 
         //close connection when the text area is removed from the document
-        $textArea.on('DOMNodeRemovedFromDocument.ghost-text', GhostTextContent.disconnectTextArea);
+        $textArea.on('DOMNodeRemovedFromDocument.ghost-text', GhostTextContent.requestServerDisconnection);
 
         //close text area when the tab is closed or reloaded
-        window.addEventListener('beforeunload', GhostTextContent.disconnectTextArea);
+        window.addEventListener('beforeunload', GhostTextContent.requestServerDisconnection);
 
         //highlight selected text area
         $textArea.css({
@@ -321,6 +321,19 @@ var GhostTextContent = {
         }
 
         return minMaxSelection;
+    },
+
+    /**
+     * Ask the background script to close the connection
+     *
+     * @private
+     * @static
+     */
+    requestServerDisconnection: function () {
+        chrome.extension.sendMessage({
+            action: 'close-connection',
+            tabId: GhostTextContent.tabId
+        });
     }
 };
 
