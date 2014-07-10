@@ -1,8 +1,8 @@
-<h1><img src="https://raw.githubusercontent.com/Cacodaimon/GhostTextForChrome/master/images/logo_banner-mini.png" alt="GhostText" title="GhostText"/> for Chrome</h1>
+<h1>![GhostText for Chrome](/images/logo_banner-for-chrome.png)</h1>
 
 GhostText Chrome extension
 
-Read more about GhostText in the [GhostText for Sublime Text repo](https://github.com/Cacodaimon/GhostTextForSublimeText).
+Read more about GhostText in the [GhostText for Sublime Text repo](/Cacodaimon/GhostTextForSublimeText).
 
 ## Installation of the development version
 
