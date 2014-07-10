@@ -1,4 +1,4 @@
-<h1><img src="https://raw.githubusercontent.com/Cacodaimon/GhostTextForChrome/master/images/logo_128.png" alt="GhostText" title="GhostText"/> for Chrome</h1>
+<h1><img src="https://raw.githubusercontent.com/Cacodaimon/GhostTextForChrome/master/images/logo_banner-mini.png" alt="GhostText" title="GhostText"/> for Chrome</h1>
 
 GhostText Chrome extension
 
