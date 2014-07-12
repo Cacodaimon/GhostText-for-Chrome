@@ -138,7 +138,7 @@ var GhostText = {
 
                 GhostText.connections[tabId].onopen = function () {
                     chrome.browserAction.setBadgeText({
-                        text: /linux/i.test(navigator.userAgent)?'OK':'✓',
+                        text: /OS X/i.test(navigator.userAgent)?'✓':'ON',
                         tabId: tabId
                     });
                     chrome.browserAction.setBadgeBackgroundColor({
