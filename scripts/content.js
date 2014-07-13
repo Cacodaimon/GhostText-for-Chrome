@@ -242,8 +242,8 @@ var GhostTextContent = {
 
         //highlight selected text area
         $textArea.css({
-            // transition: 'box-shadow 1s cubic-bezier(.25,2,.5,1)', //This would have looked nice (http://i.imgur.com/B170pRA.gif), but it leaves some dirty pixels very often, so I disabled it
-            boxShadow: '20px 20px #00adee'
+            transition: 'box-shadow 1s cubic-bezier(.25,2,.5,1)',//Restored, doesn't seem to leave any painting dirt
+            boxShadow: '#00ADEE 0 0 20px 5px inset'
         });
 
         //focus text area (scrolls it into view if it was auto-selected)
