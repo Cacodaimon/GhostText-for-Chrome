@@ -3,7 +3,7 @@
     "name": "GhostText for Chrome",
     "short_name": "GhostText",
     "description": "Use your text editor to write in Google Chrome (Sublime Text only for now)",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "author": "Guido Krömer, Federico Brigante",
     "icons": {
         "16": "images/logo_19.png",
@@ -21,13 +21,6 @@
         "default_icon":  {
             "19": "images/logo_19.png",
             "38": "images/logo_48.png"
-        }
-    },
-    "commands": {
-        "_execute_browser_action": {
-            "suggested_key": {
-              "mac": "Command+K"
-            }
         }
     },
     "background": {
