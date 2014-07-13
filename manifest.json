@@ -23,6 +23,15 @@
             "38": "images/logo_48.png"
         }
     },
+    "commands": {
+        "_execute_browser_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+K",
+                "mac": "Command+K",
+                "linux": "Ctrl+Shift+H"
+            }
+        }
+    },
     "background": {
         "scripts": [
             "vendor/jquery.min.js",
