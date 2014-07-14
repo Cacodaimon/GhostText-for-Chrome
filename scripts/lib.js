@@ -68,6 +68,7 @@ var GhostText = {
                 chrome.tabs.insertCSS(tabId,     { file: 'vendor/humane-ghosttext.css' });
                 chrome.tabs.executeScript(tabId, { file: 'vendor/jquery.min.js' });
                 chrome.tabs.executeScript(tabId, { file: 'vendor/humane-ghosttext.min.js' });
+                chrome.tabs.executeScript(tabId, { file: 'scripts/input-area.js' });
                 chrome.tabs.executeScript(tabId, { file: 'scripts/content.js' }, callback);
             }
         });
