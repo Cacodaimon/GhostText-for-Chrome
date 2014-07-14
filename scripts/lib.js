@@ -137,11 +137,12 @@ var GhostText = {
                 }
 
                 GhostText.connections[tabId].onopen = function () {
-                    chrome.browserAction.setIcon({
-                        path: {
-                            '19': 'images/logo_19-on.png',
-                            // '38': 'images/logo_48-on.png',
-                        },
+                    chrome.browserAction.setBadgeText({
+                        text: /OS X/i.test(navigator.userAgent)?'✓':'ON',
+                        tabId: tabId
+                    });
+                    chrome.browserAction.setBadgeBackgroundColor({
+                        color: '#008040',
                         tabId: tabId
                     });
                     GhostText.connections[tabId].send(msg.change);
@@ -202,11 +203,8 @@ var GhostText = {
                 tabId: tabId
             });
 
-            chrome.browserAction.setIcon({
-                path: {
-                    '19': 'images/logo_19.png',
-                    // '38': 'images/logo_48-on.png',
-                },
+            chrome.browserAction.setBadgeText({
+                text: '',
                 tabId: tabId
             });
         } catch (e) {
