@@ -1,4 +1,4 @@
-# ![GhostText for Chrome](/images/logo_banner-for-chrome.png)
+# ![GhostText for Chrome](/promo/gt_banner-for-chrome.png)
 Use your text editor to write in Google Chrome (only Sublime Text for now)
 
 Read more about GhostText in the [GhostText for Sublime Text repo](https://github.com/Cacodaimon/GhostText-for-SublimeText).

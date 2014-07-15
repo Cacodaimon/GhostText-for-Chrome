@@ -6,11 +6,11 @@
     "version": "1.0.5",
     "author": "Guido Krömer, Federico Brigante",
     "icons": {
-        "16": "images/logo_19.png",
-        "19": "images/logo_19.png",
-        "38": "images/logo_48.png",
-        "48": "images/logo_48.png",
-        "128": "images/logo_128.png"
+        "16": "images/icon_19.png",
+        "19": "images/icon_19.png",
+        "38": "images/icon_48.png",
+        "48": "images/icon_48.png",
+        "128": "images/icon_128.png"
     },
     "permissions": [
         "activeTab", "http://localhost/"
@@ -19,8 +19,8 @@
     "browser_action": {
         "default_title": "GhostText",
         "default_icon":  {
-            "19": "images/logo_19.png",
-            "38": "images/logo_48.png"
+            "19": "images/icon_19.png",
+            "38": "images/icon_48.png"
         }
     },
     "commands": {
