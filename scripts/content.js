@@ -143,6 +143,7 @@ var GhostTextContent = {
 
          //remove all event listeners
         GhostTextContent.$selectedField.off('.ghost-text');
+        GhostTextContent.$selectedField.closest('form').off('.ghost-text');
         window.removeEventListener('beforeunload', GhostTextContent.requestServerDisconnection);
 
         GhostTextContent.$selectedField = $();
@@ -237,8 +238,11 @@ var GhostTextContent = {
         //close connection when the text area is removed from the document
         $textArea.on('DOMNodeRemovedFromDocument.ghost-text', GhostTextContent.requestServerDisconnection);
 
-        //close text area when the tab is closed or reloaded
+        //close connection when the tab is closed or reloaded
         window.addEventListener('beforeunload', GhostTextContent.requestServerDisconnection);
+
+        //close connection when form is submitted (especially needed in GH comments, field is reused)
+        $textArea.closest('form').on('submit.ghost-text reset.ghost-text', GhostTextContent.requestServerDisconnection);
 
         //highlight selected text area
         $textArea.css({
