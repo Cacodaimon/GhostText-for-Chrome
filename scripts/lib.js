@@ -207,6 +207,21 @@ var GhostText = {
                 text: '',
                 tabId: tabId
             });
+
+            // we need to query it again because windowId might have changed in the meanwhile
+            chrome.tabs.get(tabId, function(tab){
+
+                //focus window back
+                chrome.windows.update(tab.windowId, {
+                    focused: true
+                });
+
+                //focus tab
+                chrome.tabs.update(tabId, {
+                    active: true
+                });
+            });
+
         } catch (e) {
             //tab might have been closed already; don't know how to detect it first.
         }
