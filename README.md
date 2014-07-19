@@ -1,9 +1,13 @@
 # ![GhostText for Chrome](/promo/gt_banner-for-chrome.png)
 Use your text editor to write in Google Chrome (only Sublime Text for now)
 
-Read more about GhostText in the [GhostText for Sublime Text repo](https://github.com/Cacodaimon/GhostText-for-SublimeText).
-
 [![Video of how it works](http://img.youtube.com/vi/e0aLFPtYPZI/maxresdefault.jpg)](http://youtu.be/e0aLFPtYPZI)
+
+## Complementary repos
+
+* [GhostText for Sublime Text](https://github.com/Cacodaimon/GhostText-for-SublimeText) (more info about the project included)
+* [GhostText for Firefox](https://github.com/Cacodaimon/GhostText-for-Firefox) (prototype)
+
 
 ## Installation of the development version
 
