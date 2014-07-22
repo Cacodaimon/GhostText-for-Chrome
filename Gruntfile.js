@@ -10,15 +10,17 @@ module.exports = function (grunt) {
         src: [
             'scripts/InputArea/Selection.ts',
             'scripts/InputArea/Selections.ts',
+            'scripts/InputArea/TextChange.ts',
             'scripts/InputArea/IInputArea.ts',
-            'scripts/InputArea/InputAreaDetector.ts',
-            'scripts/InputArea/TextArea.ts'
+            'scripts/InputArea/Detector.ts',
+            'scripts/InputArea/TextArea.ts',
+            'scripts/InputArea/ContentEditable.ts'
         ],
         dest: 'scripts/input-area.js',
         target: 'ES5',
         options: {
-            'module': 'commonjs',
-            'sourceMap': true
+            'module': 'commonjs'
+            //'sourceMap': true
         }
       }
     },

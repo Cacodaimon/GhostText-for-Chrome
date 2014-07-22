@@ -2,35 +2,17 @@
 
 module GhostText.InputArea {
     /**
-     * Workaround.
-     *
-     * @see http://stackoverflow.com/questions/17571982/dispatching-custom-events#17575452
-     */
-    export class StandardsCustomEvent {
-        static get(eventType: string, data: {}) {
-            var customEvent = <any>CustomEvent;
-            var event = new customEvent(eventType, data);
-            return <CustomEvent> event;
-        }
-    }
-
-    /**
-     * Implementation for a text area element.
+     * Implementation for a contenteditable element.
      *
      * @licence The MIT License (MIT)
      * @author Guido Krömer <mail 64 cacodaemon 46 de>
      */
-    export class TextArea implements IInputArea {
+    export class ContentEditable implements IInputArea {
 
         /**
          * The bind HTML text area element.
          */
-        private textArea: HTMLTextAreaElement = null;
-
-        /**
-         * The jQuery representation of textArea.
-         */
-        private $textArea: JQuery = null;
+        private contentEditableElement: HTMLDivElement = null;
 
         /**
          * Callback fired on an input event.
@@ -60,7 +42,12 @@ module GhostText.InputArea {
         /**
          * Custom event fired on text change.
          */
-        private customEvent: Event = null;
+        private internalInputEvent: any = null;
+
+        /**
+         * Custom event fired on focus.
+         */
+        private internalFocusEvent: any = null;
 
         /**
          * TODO type and not any
@@ -68,55 +55,45 @@ module GhostText.InputArea {
         private eventListenerBeforeUnload: any = null;
 
         public bind(domElement: HTMLElement): void {
-            this.textArea = <HTMLTextAreaElement>domElement;
-            this.$textArea = $(this.textArea);
+            this.contentEditableElement = <HTMLDivElement>domElement;
             var that = this;
-
-            this.$textArea.on('input.ghost-text', function (e) {
-                if (that.textChangedEventCB) {
-                    that.textChangedEventCB(that, that.getText());
-                }
-            });
-
-            this.$textArea.on('focus.ghost-text', function (e) {
-                if (that.focusEventCB) {
-                    that.focusEventCB(that);
-                }
-            });
-
-            this.$textArea.on('onmouseup.ghost-text', function (e) {
-                if (that.selectionChangedEventCB) {
-                    that.selectionChangedEventCB(that, that.getSelections());
-                }
-            });
-
-            this.$textArea.on('DOMNodeRemovedFromDocument.ghost-text', function (e) {
-                if (that.removeEventCB) {
-                    that.removeEventCB(that);
-                }
-            });
 
             this.eventListenerBeforeUnload = function (e) {
                 if (that.unloadEventCB) {
                     that.unloadEventCB(that);
                 }
             };
-            window.addEventListener('beforeunload', this.eventListenerBeforeUnload);
 
-            this.customEvent = <Event>StandardsCustomEvent.get('CustomEvent',  { detail: { generatedByGhostText: true} });
+            this.internalFocusEvent = function (e) {
+                if (that.focusEventCB) {
+                    that.focusEventCB(that);
+                }
+            };
+            this.contentEditableElement.addEventListener('focus', this.internalFocusEvent, false);
+
+            this.internalInputEvent = function (e) {
+                if (that.textChangedEventCB) {
+                    that.textChangedEventCB(that, e.srcElement.innerHTML);
+                }
+            };
+            this.contentEditableElement.addEventListener('input', this.internalInputEvent, false);
+
+
+            window.addEventListener('beforeunload', this.eventListenerBeforeUnload);
 
             this.highlight();
         }
 
         public unbind(): void {
-            console.log('unbind');
-            this.$textArea.off('.ghost-text');
+            this.contentEditableElement.removeEventListener('focus', this.internalFocusEvent);
+            this.contentEditableElement.removeEventListener('input', this.internalInputEvent);
             window.removeEventListener('beforeunload', this.eventListenerBeforeUnload);
             this.removeHighlight();
         }
 
         public focus(): void {
-            this.textArea.focus();
+            console.log('focus');
+            this.contentEditableElement.focus();
 
             var that = this;
             if (this.focusEventCB) {
@@ -145,26 +122,19 @@ module GhostText.InputArea {
         }
 
         public getText(): string {
-            return this.$textArea.val();
+            return this.contentEditableElement.innerHTML;
         }
 
         public setText(text: string): void {
-            this.$textArea.val(text);
-
-            this.textArea.dispatchEvent(this.customEvent);
+            this.contentEditableElement.innerHTML = text;
         }
 
         public getSelections(): Selections {
-            return new Selections([new Selection(
-                this.textArea.selectionStart,
-                this.textArea.selectionEnd
-            )]);
+            return new Selections([]);
         }
 
         public setSelections(selections: Selections): void {
-            var selection: Selection = selections.getMinMaxSelection();
-            this.textArea.selectionStart = selection.start;
-            this.textArea.selectionEnd   = selection.end;
+
         }
 
         public buildChange(): TextChange {
@@ -178,17 +148,14 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            this.$textArea.css({
-                transition: 'box-shadow 1s cubic-bezier(.25,2,.5,1)',
-                boxShadow: '#00ADEE 0 0 20px 5px inset'
-            });
+            //TODO
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            this.$textArea.css({boxShadow: ''});
+            //TODO
         }
     }
 }

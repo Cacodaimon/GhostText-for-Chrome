@@ -36,7 +36,7 @@ module GhostText.InputArea {
          *
          * @param callback
          */
-        selectionChangedEvent(callback:(inputArea: IInputArea, selection: Selection) => void): void;
+        selectionChangedEvent(callback:(inputArea: IInputArea, selections: Selections) => void): void;
 
         /**
          * Binds an unload event fired when the element gets removed from the dom.
@@ -51,6 +51,13 @@ module GhostText.InputArea {
          * @param callback
          */
         focusEvent(callback:(inputArea: IInputArea) => void): void;
+
+        /**
+         * Binds an unload event fired when the elements documents get unloaded.
+         *
+         * @param callback
+         */
+        unloadEvent(callback:(inputArea: IInputArea) => void): void;
 
         /**
          * Gets the element's text.
@@ -75,5 +82,10 @@ module GhostText.InputArea {
          * @param selections
          */
         setSelections(selections: Selections): void;
+
+        /**
+         * Builds a text change object which the server understands.
+         */
+        buildChange(): TextChange;
     }
 }

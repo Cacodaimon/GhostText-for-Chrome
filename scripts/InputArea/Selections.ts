@@ -42,7 +42,7 @@ module GhostText.InputArea {
          *
          * @return {Selection}
          */
-        public getMinMaxSelection (): Selection {
+        public getMinMaxSelection(): Selection {
             var minMaxSelection = new Selection(Number.MAX_VALUE, Number.MIN_VALUE);
 
             for (var i = this.selections.length - 1; i >= 0; i--) {
@@ -51,6 +51,27 @@ module GhostText.InputArea {
             }
 
             return minMaxSelection;
+        }
+
+        /**
+         * Builds a Selections instance form a untyped JS object.
+         *
+         * @param selections
+         * @return {GhostText.InputArea.Selections}
+         */
+        public static fromPlainJS(selections: Array<any>)
+        {
+            var newSelections: Array<Selection> = [];
+
+            for (var i = selections.length - 1; i >= 0; i--) {
+                newSelections.push(new Selection(selections[i].start, selections[i].end));
+            }
+
+            return new Selections(newSelections);
+        }
+
+        public toJSON(): Array<Selection> {
+            return this.selections;
         }
     }
 }

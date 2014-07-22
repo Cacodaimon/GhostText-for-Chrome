@@ -16,6 +16,10 @@ module GhostText.InputArea {
          */
         private onFocusCB: (inputArea: IInputArea) => void = null;
 
+        public constructor() {
+            this.inputAreaElements = [];
+        }
+
         /**
          * Detects supported element in the given DOM.
          *
@@ -28,6 +32,7 @@ module GhostText.InputArea {
             }
 
             this.addTextAreas(document);
+            this.addContentEditableElements(document);
 
             if (this.inputAreaElements.length === 0) {
                 throw 'No supported elements found!';
@@ -57,12 +62,27 @@ module GhostText.InputArea {
          * @param document
          */
         private addTextAreas(document: HTMLDocument): void {
-            var textAreas: NodeListOf<HTMLTextAreaElement> = document.getElementsByTagName('textarea');
+            var textAreas: NodeListOf<HTMLTextAreaElement> = document.body.getElementsByTagName('textarea');
 
             for (var i = 0; i < textAreas.length; i++) {
                 var inputArea = new TextArea();
                 inputArea.bind(textAreas[i]);
+                this.inputAreaElements.push(inputArea)
+            }
+        }
 
+        /**
+         * Adds all content editable elements found in the dom.
+         *
+         * @param document
+         */
+        private addContentEditableElements(document: HTMLDocument): void {
+            var contentEditables: NodeList = document.body.querySelectorAll('[contenteditable=\'true\']');
+
+            for (var i = 0; i < contentEditables.length; i++) {
+                console.log(contentEditables[i]);
+                var inputArea = new ContentEditable();
+                inputArea.bind(<HTMLDivElement>contentEditables[i]);
                 this.inputAreaElements.push(inputArea)
             }
         }
@@ -76,6 +96,7 @@ module GhostText.InputArea {
             if (this.inputAreaElements.length === 1) {
                 var inputArea: IInputArea = this.inputAreaElements[0];
                 inputArea.focusEvent(that.onFocusCB);
+                inputArea.focus();
 
                 return true;
             }
