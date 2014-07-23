@@ -97,6 +97,7 @@ var GhostText;
 
                 this.addTextAreas(document);
                 this.addContentEditableElements(document);
+                this.addAceElements(document);
 
                 if (this.inputAreaElements.length === 0) {
                     throw 'No supported elements found!';
@@ -136,6 +137,25 @@ var GhostText;
                 }
             };
 
+            Detector.prototype.addAceElements = function (document) {
+                var aceEditors = document.body.querySelectorAll('.ace_editor');
+
+                var script = [
+                    'var ghostTextAceEditor = ace.edit(document.querySelector(\'.ace_editor\')).getSession()',
+                    'var body = document.getElementsByTagName(\'body\')[0]',
+                    'var textArea = document.createElement(\'textarea\')',
+                    'textArea.setAttribute(\'id\', \'ghost-text-ace-text-area\')',
+                    'textArea.innerText = ghostTextAceEditor.getValue()',
+                    'body.appendChild(textArea)',
+                    'ghostTextAceEditor.on(\'change\', function(e) { textArea.innerText = ghostTextAceEditor.getValue() })',
+                    'textArea.addEventListener(\'input\', function () { ghostTextAceEditor.setValue(textArea.value) }, false);'
+                ];
+
+                for (var i = 0; i < aceEditors.length; i++) {
+                    GhostText.InputArea.Detector.injectScript(document, script.join(';'));
+                }
+            };
+
             Detector.prototype.trySingleElement = function () {
                 var that = this;
                 if (this.inputAreaElements.length === 1) {
@@ -163,6 +183,14 @@ var GhostText;
                     });
                 }
             };
+
+            Detector.injectScript = function (document, javaScript) {
+                var head = document.getElementsByTagName('head')[0];
+                var script = document.createElement('script');
+                script.setAttribute('type', 'text/javascript');
+                script.innerText = javaScript;
+                head.appendChild(script);
+            };
             return Detector;
         })();
         InputArea.Detector = Detector;
@@ -187,50 +215,48 @@ var GhostText;
         var TextArea = (function () {
             function TextArea() {
                 this.textArea = null;
-                this.$textArea = null;
                 this.textChangedEventCB = null;
                 this.selectionChangedEventCB = null;
                 this.removeEventCB = null;
                 this.focusEventCB = null;
                 this.unloadEventCB = null;
                 this.customEvent = null;
-                this.eventListenerBeforeUnload = null;
+                this.inputEventListener = null;
+                this.focusEventListener = null;
+                this.beforeUnloadListener = null;
+                this.elementRemovedListener = null;
             }
             TextArea.prototype.bind = function (domElement) {
                 this.textArea = domElement;
-                this.$textArea = $(this.textArea);
                 var that = this;
 
-                this.$textArea.on('input.ghost-text', function (e) {
-                    if (that.textChangedEventCB) {
-                        that.textChangedEventCB(that, that.getText());
-                    }
-                });
-
-                this.$textArea.on('focus.ghost-text', function (e) {
+                this.focusEventListener = function (e) {
                     if (that.focusEventCB) {
                         that.focusEventCB(that);
                     }
-                });
+                };
+                this.textArea.addEventListener('focus', this.focusEventListener, false);
 
-                this.$textArea.on('onmouseup.ghost-text', function (e) {
-                    if (that.selectionChangedEventCB) {
-                        that.selectionChangedEventCB(that, that.getSelections());
+                this.inputEventListener = function (e) {
+                    if (that.textChangedEventCB) {
+                        that.textChangedEventCB(that, that.getText());
                     }
-                });
+                };
+                this.textArea.addEventListener('input', this.inputEventListener, false);
 
-                this.$textArea.on('DOMNodeRemovedFromDocument.ghost-text', function (e) {
-                    if (that.removeEventCB) {
-                        that.removeEventCB(that);
+                this.elementRemovedListener = function (e) {
+                    if (that.textChangedEventCB) {
+                        that.textChangedEventCB(that, that.getText());
                     }
-                });
+                };
+                this.textArea.addEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener, false);
 
-                this.eventListenerBeforeUnload = function (e) {
+                this.beforeUnloadListener = function (e) {
                     if (that.unloadEventCB) {
                         that.unloadEventCB(that);
                     }
                 };
-                window.addEventListener('beforeunload', this.eventListenerBeforeUnload);
+                window.addEventListener('beforeunload', this.beforeUnloadListener);
 
                 this.customEvent = StandardsCustomEvent.get('CustomEvent', { detail: { generatedByGhostText: true } });
 
@@ -238,9 +264,10 @@ var GhostText;
             };
 
             TextArea.prototype.unbind = function () {
-                console.log('unbind');
-                this.$textArea.off('.ghost-text');
-                window.removeEventListener('beforeunload', this.eventListenerBeforeUnload);
+                this.textArea.removeEventListener('focus', this.focusEventListener);
+                this.textArea.removeEventListener('input', this.inputEventListener);
+                this.textArea.removeEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener);
+                window.removeEventListener('beforeunload', this.beforeUnloadListener);
                 this.removeHighlight();
             };
 
@@ -274,11 +301,11 @@ var GhostText;
             };
 
             TextArea.prototype.getText = function () {
-                return this.$textArea.val();
+                return this.textArea.value;
             };
 
             TextArea.prototype.setText = function (text) {
-                this.$textArea.val(text);
+                this.textArea.value = text;
 
                 this.textArea.dispatchEvent(this.customEvent);
             };
@@ -298,14 +325,11 @@ var GhostText;
             };
 
             TextArea.prototype.highlight = function () {
-                this.$textArea.css({
-                    transition: 'box-shadow 1s cubic-bezier(.25,2,.5,1)',
-                    boxShadow: '#00ADEE 0 0 20px 5px inset'
-                });
+                this.textArea.setAttribute('style', 'transition: box-shadow 1s cubic-bezier(.25,2,.5,1); boxShadow: "#00ADEE" 0 0 20px 5px inset');
             };
 
             TextArea.prototype.removeHighlight = function () {
-                this.$textArea.css({ boxShadow: '' });
+                this.textArea.setAttribute('style', '');
             };
             return TextArea;
         })();
@@ -324,43 +348,42 @@ var GhostText;
                 this.removeEventCB = null;
                 this.focusEventCB = null;
                 this.unloadEventCB = null;
-                this.internalInputEvent = null;
-                this.internalFocusEvent = null;
-                this.eventListenerBeforeUnload = null;
+                this.inputEventListener = null;
+                this.focusEventListener = null;
+                this.beforeUnloadListener = null;
             }
             ContentEditable.prototype.bind = function (domElement) {
                 this.contentEditableElement = domElement;
                 var that = this;
 
-                this.eventListenerBeforeUnload = function (e) {
-                    if (that.unloadEventCB) {
-                        that.unloadEventCB(that);
-                    }
-                };
-
-                this.internalFocusEvent = function (e) {
+                this.focusEventListener = function (e) {
                     if (that.focusEventCB) {
                         that.focusEventCB(that);
                     }
                 };
-                this.contentEditableElement.addEventListener('focus', this.internalFocusEvent, false);
+                this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
 
-                this.internalInputEvent = function (e) {
+                this.inputEventListener = function (e) {
                     if (that.textChangedEventCB) {
-                        that.textChangedEventCB(that, e.srcElement.innerHTML);
+                        that.textChangedEventCB(that, that.getText());
                     }
                 };
-                this.contentEditableElement.addEventListener('input', this.internalInputEvent, false);
+                this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
 
-                window.addEventListener('beforeunload', this.eventListenerBeforeUnload);
+                this.beforeUnloadListener = function (e) {
+                    if (that.unloadEventCB) {
+                        that.unloadEventCB(that);
+                    }
+                };
+                window.addEventListener('beforeunload', this.beforeUnloadListener);
 
                 this.highlight();
             };
 
             ContentEditable.prototype.unbind = function () {
-                this.contentEditableElement.removeEventListener('focus', this.internalFocusEvent);
-                this.contentEditableElement.removeEventListener('input', this.internalInputEvent);
-                window.removeEventListener('beforeunload', this.eventListenerBeforeUnload);
+                this.contentEditableElement.removeEventListener('focus', this.focusEventListener);
+                this.contentEditableElement.removeEventListener('input', this.inputEventListener);
+                window.removeEventListener('beforeunload', this.beforeUnloadListener);
                 this.removeHighlight();
             };
 

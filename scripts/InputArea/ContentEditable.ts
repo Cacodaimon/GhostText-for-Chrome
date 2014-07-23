@@ -42,52 +42,51 @@ module GhostText.InputArea {
         /**
          * Custom event fired on text change.
          */
-        private internalInputEvent: any = null;
+        private inputEventListener: EventListener = null;
 
         /**
          * Custom event fired on focus.
          */
-        private internalFocusEvent: any = null;
+        private focusEventListener: EventListener = null;
 
         /**
-         * TODO type and not any
+         * Fired when the elements page gets reloaded.
          */
-        private eventListenerBeforeUnload: any = null;
+        private beforeUnloadListener: EventListener = null;
 
         public bind(domElement: HTMLElement): void {
             this.contentEditableElement = <HTMLDivElement>domElement;
             var that = this;
 
-            this.eventListenerBeforeUnload = function (e) {
-                if (that.unloadEventCB) {
-                    that.unloadEventCB(that);
-                }
-            };
 
-            this.internalFocusEvent = function (e) {
+            this.focusEventListener = function (e) {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
             };
-            this.contentEditableElement.addEventListener('focus', this.internalFocusEvent, false);
+            this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
 
-            this.internalInputEvent = function (e) {
+            this.inputEventListener = function (e) {
                 if (that.textChangedEventCB) {
-                    that.textChangedEventCB(that, e.srcElement.innerHTML);
+                    that.textChangedEventCB(that, that.getText());
                 }
             };
-            this.contentEditableElement.addEventListener('input', this.internalInputEvent, false);
+            this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
 
-
-            window.addEventListener('beforeunload', this.eventListenerBeforeUnload);
+            this.beforeUnloadListener = function (e) {
+                if (that.unloadEventCB) {
+                    that.unloadEventCB(that);
+                }
+            };
+            window.addEventListener('beforeunload', this.beforeUnloadListener);
 
             this.highlight();
         }
 
         public unbind(): void {
-            this.contentEditableElement.removeEventListener('focus', this.internalFocusEvent);
-            this.contentEditableElement.removeEventListener('input', this.internalInputEvent);
-            window.removeEventListener('beforeunload', this.eventListenerBeforeUnload);
+            this.contentEditableElement.removeEventListener('focus', this.focusEventListener);
+            this.contentEditableElement.removeEventListener('input', this.inputEventListener);
+            window.removeEventListener('beforeunload', this.beforeUnloadListener);
             this.removeHighlight();
         }
 

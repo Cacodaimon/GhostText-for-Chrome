@@ -33,6 +33,7 @@ module GhostText.InputArea {
 
             this.addTextAreas(document);
             this.addContentEditableElements(document);
+            this.addAceElements(document);
 
             if (this.inputAreaElements.length === 0) {
                 throw 'No supported elements found!';
@@ -87,6 +88,26 @@ module GhostText.InputArea {
             }
         }
 
+        private addAceElements(document: HTMLDocument): void {
+            var aceEditors: NodeList = document.body.querySelectorAll('.ace_editor');
+            //console.log(aceEditors[0].getAttribute('id'));
+
+            var script = [
+                'var ghostTextAceEditor = ace.edit(document.querySelector(\'.ace_editor\')).getSession()',
+                'var body = document.getElementsByTagName(\'body\')[0]',
+                'var textArea = document.createElement(\'textarea\')',
+                'textArea.setAttribute(\'id\', \'ghost-text-ace-text-area\')',
+                'textArea.innerText = ghostTextAceEditor.getValue()',
+                'body.appendChild(textArea)',
+                'ghostTextAceEditor.on(\'change\', function(e) { textArea.innerText = ghostTextAceEditor.getValue() })',
+                'textArea.addEventListener(\'input\', function () { ghostTextAceEditor.setValue(textArea.value) }, false);'
+            ];
+
+            for (var i = 0; i < aceEditors.length; i++) {
+                GhostText.InputArea.Detector.injectScript(document, script.join(';'))
+            }
+        }
+
         /**
          * If only one supported element was found the onFocus callback get raised automatically.
          * @return {boolean}
@@ -120,6 +141,20 @@ module GhostText.InputArea {
                     that.onFocusCB(inputArea);
                 });
             }
+        }
+
+        /**
+         * Injects the given JavaScript to the specified dom.
+         *
+         * @param document The DOM document.
+         * @param javaScript The script to inject as string.
+         */
+        private static injectScript(document: HTMLDocument, javaScript: string): void {
+            var head: HTMLHeadElement = document.getElementsByTagName('head')[0];
+            var script: HTMLScriptElement = document.createElement('script');
+            script.setAttribute('type', 'text/javascript');
+            script.innerText = javaScript;
+            head.appendChild(script);
         }
     }
 }
