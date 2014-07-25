@@ -95,9 +95,9 @@ var GhostText;
                     throw 'On focus callback is missing!';
                 }
 
+                this.addAceElements(document);
                 this.addTextAreas(document);
                 this.addContentEditableElements(document);
-                this.addAceElements(document);
 
                 if (this.inputAreaElements.length === 0) {
                     throw 'No supported elements found!';
@@ -140,20 +140,29 @@ var GhostText;
             Detector.prototype.addAceElements = function (document) {
                 var aceEditors = document.body.querySelectorAll('.ace_editor');
 
-                var script = [
-                    'var ghostTextAceEditor = ace.edit(document.querySelector(\'.ace_editor\')).getSession()',
-                    'var body = document.getElementsByTagName(\'body\')[0]',
-                    'var textArea = document.createElement(\'textarea\')',
-                    'textArea.setAttribute(\'id\', \'ghost-text-ace-text-area\')',
-                    'textArea.innerText = ghostTextAceEditor.getValue()',
-                    'body.appendChild(textArea)',
-                    'ghostTextAceEditor.on(\'change\', function(e) { textArea.innerText = ghostTextAceEditor.getValue() })',
-                    'textArea.addEventListener(\'input\', function () { ghostTextAceEditor.setValue(textArea.value) }, false);'
-                ];
-
                 for (var i = 0; i < aceEditors.length; i++) {
-                    GhostText.InputArea.Detector.injectScript(document, script.join(';'));
+                    var aceEditor = aceEditors[i];
+                    var id = aceEditor.getAttribute('id');
+                    this.injectScript(document, this.buildAceScript(id));
                 }
+            };
+
+            Detector.prototype.buildAceScript = function (id) {
+                return [
+                    '(function() {',
+                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id, '")).getSession();',
+                    'var body = document.getElementsByTagName("body")[0];',
+                    'var textArea = document.createElement("textarea");',
+                    'textArea.setAttribute("id", "ghost-text-ace-text-area-', id, '");',
+                    'textArea.setAttribute("class", "ghost-text-ace-text-area");',
+                    'textArea.innerText = ghostTextAceEditor.getValue();',
+                    'body.appendChild(textArea);',
+                    'ghostTextAceEditor.on("change", function(e) {',
+                    'textArea.value = ghostTextAceEditor.getValue();',
+                    '});',
+                    'textArea.addEventListener("input", function (e) { ghostTextAceEditor.setValue(textArea.value) }, false);',
+                    '})();'
+                ].join('');
             };
 
             Detector.prototype.trySingleElement = function () {
@@ -184,7 +193,7 @@ var GhostText;
                 }
             };
 
-            Detector.injectScript = function (document, javaScript) {
+            Detector.prototype.injectScript = function (document, javaScript) {
                 var head = document.getElementsByTagName('head')[0];
                 var script = document.createElement('script');
                 script.setAttribute('type', 'text/javascript');
