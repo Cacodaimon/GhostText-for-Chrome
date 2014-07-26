@@ -83,6 +83,10 @@ module GhostText.InputArea {
 
 
             this.focusEventListener = function (e: CustomEvent) {
+                if (that.currentText == e.detail.text) {
+                    return;
+                }
+
                 that.currentText = e.detail.text;
 
                 if (that.focusEventCB) {
@@ -167,14 +171,16 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            //TODO
+            var gtDoHighlightEvent = <Event>StandardsCustomEvent.get('GhostTextDoHighlight', {});
+            this.jsCodeEditorDiv.dispatchEvent(gtDoHighlightEvent);
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            //TODO
+            var gtRemoveHighlightEvent = <Event>StandardsCustomEvent.get('GhostTextRemoveHighlight', {});
+            this.jsCodeEditorDiv.dispatchEvent(gtRemoveHighlightEvent);
         }
     }
 }

@@ -113,7 +113,7 @@ var GhostText;
                 }
 
                 this.addAceElements(document);
-
+                this.addTextAreas(document);
                 this.addContentEditableElements(document);
 
                 if (this.inputAreaElements.length === 0) {
@@ -147,7 +147,6 @@ var GhostText;
                 var contentEditables = document.body.querySelectorAll('[contenteditable=\'true\']');
 
                 for (var i = 0; i < contentEditables.length; i++) {
-                    console.log(contentEditables[i]);
                     var inputArea = new InputArea.ContentEditable();
                     inputArea.bind(contentEditables[i]);
                     this.inputAreaElements.push(inputArea);
@@ -160,6 +159,10 @@ var GhostText;
                 for (var i = 0; i < aceEditors.length; i++) {
                     var aceEditor = aceEditors[i];
                     var id = aceEditor.getAttribute('id');
+                    if (id === null) {
+                        id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
+                        aceEditor.setAttribute('id', id);
+                    }
                     this.injectScript(document, this.buildAceScript(id));
                     var inputArea = new InputArea.JSCodeEditor();
                     inputArea.bind(aceEditor);
@@ -171,21 +174,29 @@ var GhostText;
                 return [
                     '(function() {',
                     'var ghostTextAceDiv = document.querySelector("#', id, '");',
-                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id, '"));',
+                    'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
                     'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
-                    'console.log("window.addEventListener > GhostTextServerInput");',
-                    'console.log(["GhostTextServerInput", e, e.detail]);',
                     'ghostTextAceEditorSession.setValue(e.detail.text);',
                     '}, false);',
+                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
+                    'ghostTextAceEditor.focus();',
+                    '});',
+                    'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
+                    'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
+                    'ghostTextAceScrollerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
+                    'ghostTextAceScrollerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
+                    '});',
+                    'ghostTextAceDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
+                    'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
+                    'ghostTextAceScrollerDiv.style.boxShadow = "";',
+                    '});',
                     'ghostTextAceEditorSession.on("change", function(e) {',
-                    'console.log(["ghostTextAceEditor.on > change", e]);',
+                    'window.setTimeout(function () {',
                     'var value = ghostTextAceEditorSession.getValue();',
                     'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
                     'ghostTextAceDiv.dispatchEvent(inputEvent);',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                    'ghostTextAceEditor.focus();',
+                    '}, 100);',
                     '});',
                     'ghostTextAceEditor.on("focus", function(e) {',
                     'var value = ghostTextAceEditorSession.getValue();',
@@ -193,7 +204,7 @@ var GhostText;
                     'ghostTextAceDiv.dispatchEvent(focusEvent);',
                     '});',
                     '})();'
-                ].join('\n');
+                ].join('');
             };
 
             Detector.prototype.trySingleElement = function () {
@@ -225,7 +236,6 @@ var GhostText;
             };
 
             Detector.prototype.injectScript = function (document, javaScript) {
-                console.log(['injectScript', javaScript]);
                 var head = document.getElementsByTagName('head')[0];
                 var script = document.createElement('script');
                 script.setAttribute('type', 'text/javascript');
@@ -270,8 +280,6 @@ var GhostText;
                     if (e.detail && e.detail['generatedByGhostText']) {
                         return;
                     }
-
-                    console.log(e);
 
                     if (that.textChangedEventCB) {
                         that.textChangedEventCB(that, that.getText());
@@ -360,11 +368,12 @@ var GhostText;
             };
 
             TextArea.prototype.highlight = function () {
-                this.textArea.setAttribute('style', 'transition: box-shadow 1s cubic-bezier(.25,2,.5,1); boxShadow: "#00ADEE" 0 0 20px 5px inset');
+                this.textArea.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+                this.textArea.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
             };
 
             TextArea.prototype.removeHighlight = function () {
-                this.textArea.setAttribute('style', '');
+                this.textArea.style.boxShadow = '';
             };
             return TextArea;
         })();
@@ -407,6 +416,10 @@ var GhostText;
                 this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
 
                 this.focusEventListener = function (e) {
+                    if (that.currentText == e.detail.text) {
+                        return;
+                    }
+
                     that.currentText = e.detail.text;
 
                     if (that.focusEventCB) {
@@ -484,9 +497,13 @@ var GhostText;
             };
 
             JSCodeEditor.prototype.highlight = function () {
+                var gtDoHighlightEvent = InputArea.StandardsCustomEvent.get('GhostTextDoHighlight', {});
+                this.jsCodeEditorDiv.dispatchEvent(gtDoHighlightEvent);
             };
 
             JSCodeEditor.prototype.removeHighlight = function () {
+                var gtRemoveHighlightEvent = InputArea.StandardsCustomEvent.get('GhostTextRemoveHighlight', {});
+                this.jsCodeEditorDiv.dispatchEvent(gtRemoveHighlightEvent);
             };
             return JSCodeEditor;
         })();

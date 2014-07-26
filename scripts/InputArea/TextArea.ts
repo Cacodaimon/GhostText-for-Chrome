@@ -79,8 +79,6 @@ module GhostText.InputArea {
                     return;
                 }
 
-                console.log(e);
-
                 if (that.textChangedEventCB) {
                     that.textChangedEventCB(that, that.getText());
                 }
@@ -179,14 +177,15 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            this.textArea.setAttribute('style', 'transition: box-shadow 1s cubic-bezier(.25,2,.5,1); boxShadow: "#00ADEE" 0 0 20px 5px inset');
+            this.textArea.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+            this.textArea.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            this.textArea.setAttribute('style', '');
+            this.textArea.style.boxShadow = '';
         }
     }
 }

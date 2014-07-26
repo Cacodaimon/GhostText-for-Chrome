@@ -175,7 +175,6 @@ var GhostTextContent = {
      */
     enableField: function () {
         console.log('GhostText: enableField()');
-        console.log(GhostTextContent.currentInputArea);
 
         var inputArea = GhostTextContent.currentInputArea;
 
@@ -232,8 +231,6 @@ var GhostTextContent = {
      */
     updateFieldData: function(data) {
         console.log('GhostText: updateFieldData()');
-
-        console.log(data);
 
         GhostTextContent.currentInputArea.setText(data.text);
         GhostTextContent.currentInputArea.setSelections(Selections.fromPlainJS(data.selections));
