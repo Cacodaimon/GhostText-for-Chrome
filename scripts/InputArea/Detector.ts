@@ -110,29 +110,31 @@ module GhostText.InputArea {
         private buildAceScript(id): string {
             return [
                 '(function() {',
+                    'var ghostTextAceDiv = document.querySelector("#', id,'");',
                     'var ghostTextAceEditor = ace.edit(document.querySelector("#', id,'"));',
-                    'var ghostTextAceEditorSession = ace.edit(document.querySelector("#', id,'")).getSession();',
+                    'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
 
-                    'window.addEventListener("GhostTextServerInput", function (e) {',
+                    'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
                         'console.log("window.addEventListener > GhostTextServerInput");',
                         'console.log(["GhostTextServerInput", e, e.detail]);',
                         'ghostTextAceEditorSession.setValue(e.detail.text);',
                     '}, false);',
 
                     'ghostTextAceEditorSession.on("change", function(e) {',
-                        'console.log("ghostTextAceEditor.on > change");',
+                        'console.log(["ghostTextAceEditor.on > change", e]);',
                         'var value = ghostTextAceEditorSession.getValue();',
                         'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                        'window.dispatchEvent(inputEvent);',
+                        'ghostTextAceDiv.dispatchEvent(inputEvent);',
                     '});',
 
-                    'var focusEvent = document.createEvent("CustomEvent");',
-                    'focusEvent.initEvent("GhostTextJSCodeEditorFocus", false, false);',
+                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
+                        'ghostTextAceEditor.focus();',
+                    '});',
 
                     'ghostTextAceEditor.on("focus", function(e) {',
                         'var value = ghostTextAceEditorSession.getValue();',
                         'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                        'window.dispatchEvent(focusEvent);',
+                        'ghostTextAceDiv.dispatchEvent(focusEvent);',
                     '});',
 
                 '})();'

@@ -10,6 +10,11 @@ module GhostText.InputArea {
     export class JSCodeEditor implements IInputArea {
 
         /**
+         * The editor's div element.
+         */
+        private jsCodeEditorDiv: HTMLDivElement = null;
+
+        /**
          * Callback fired on an input event.
          */
         private textChangedEventCB: (inputArea: IInputArea, text: string) => void = null;
@@ -60,16 +65,21 @@ module GhostText.InputArea {
         private currentText: string = '';
 
         public bind(domElement: HTMLElement): void {
+            this.jsCodeEditorDiv = <HTMLDivElement>domElement;
             var that = this;
 
             this.inputEventListener = function (e: CustomEvent) {
+                if (that.currentText == e.detail.text) {
+                    return;
+                }
+
                 that.currentText = e.detail.text;
 
                 if (that.textChangedEventCB) {
                     that.textChangedEventCB(that, that.getText());
                 }
             };
-            window.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
+            this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
 
 
             this.focusEventListener = function (e: CustomEvent) {
@@ -79,27 +89,28 @@ module GhostText.InputArea {
                     that.focusEventCB(that);
                 }
             };
-            window.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
+            this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
 
             this.beforeUnloadListener = function (e) {
                 if (that.unloadEventCB) {
                     that.unloadEventCB(that);
                 }
             };
-            window.addEventListener('beforeunload', this.beforeUnloadListener);
+            this.jsCodeEditorDiv.addEventListener('beforeunload', this.beforeUnloadListener);
 
             this.highlight();
         }
 
         public unbind(): void {
-            window.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
-            window.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
-            window.removeEventListener('beforeunload', this.beforeUnloadListener);
+            this.jsCodeEditorDiv.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
+            this.jsCodeEditorDiv.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
+            this.jsCodeEditorDiv.removeEventListener('beforeunload', this.beforeUnloadListener);
             this.removeHighlight();
         }
 
         public focus(): void {
-            //TODO
+            var gtDoFocusEvent = <Event>StandardsCustomEvent.get('GhostTextDoFocus', {});
+            window.dispatchEvent(gtDoFocusEvent);
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
@@ -127,10 +138,14 @@ module GhostText.InputArea {
         }
 
         public setText(text: string): void {
+            if (this.currentText == text) {
+                return;
+            }
+
             this.currentText = text;
             var details = { detail: { text: this.currentText} };
             var gtServerInputEvent = <Event>StandardsCustomEvent.get('GhostTextServerInput', details);
-            window.dispatchEvent(gtServerInputEvent);
+            this.jsCodeEditorDiv.dispatchEvent(gtServerInputEvent);
         }
 
         public getSelections(): Selections {

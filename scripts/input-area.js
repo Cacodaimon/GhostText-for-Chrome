@@ -170,25 +170,27 @@ var GhostText;
             Detector.prototype.buildAceScript = function (id) {
                 return [
                     '(function() {',
+                    'var ghostTextAceDiv = document.querySelector("#', id, '");',
                     'var ghostTextAceEditor = ace.edit(document.querySelector("#', id, '"));',
-                    'var ghostTextAceEditorSession = ace.edit(document.querySelector("#', id, '")).getSession();',
-                    'window.addEventListener("GhostTextServerInput", function (e) {',
+                    'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
+                    'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
                     'console.log("window.addEventListener > GhostTextServerInput");',
                     'console.log(["GhostTextServerInput", e, e.detail]);',
                     'ghostTextAceEditorSession.setValue(e.detail.text);',
                     '}, false);',
                     'ghostTextAceEditorSession.on("change", function(e) {',
-                    'console.log("ghostTextAceEditor.on > change");',
+                    'console.log(["ghostTextAceEditor.on > change", e]);',
                     'var value = ghostTextAceEditorSession.getValue();',
                     'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                    'window.dispatchEvent(inputEvent);',
+                    'ghostTextAceDiv.dispatchEvent(inputEvent);',
                     '});',
-                    'var focusEvent = document.createEvent("CustomEvent");',
-                    'focusEvent.initEvent("GhostTextJSCodeEditorFocus", false, false);',
+                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
+                    'ghostTextAceEditor.focus();',
+                    '});',
                     'ghostTextAceEditor.on("focus", function(e) {',
                     'var value = ghostTextAceEditorSession.getValue();',
                     'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                    'window.dispatchEvent(focusEvent);',
+                    'ghostTextAceDiv.dispatchEvent(focusEvent);',
                     '});',
                     '})();'
                 ].join('\n');
@@ -375,6 +377,7 @@ var GhostText;
     (function (InputArea) {
         var JSCodeEditor = (function () {
             function JSCodeEditor() {
+                this.jsCodeEditorDiv = null;
                 this.textChangedEventCB = null;
                 this.selectionChangedEventCB = null;
                 this.removeEventCB = null;
@@ -387,16 +390,21 @@ var GhostText;
                 this.currentText = '';
             }
             JSCodeEditor.prototype.bind = function (domElement) {
+                this.jsCodeEditorDiv = domElement;
                 var that = this;
 
                 this.inputEventListener = function (e) {
+                    if (that.currentText == e.detail.text) {
+                        return;
+                    }
+
                     that.currentText = e.detail.text;
 
                     if (that.textChangedEventCB) {
                         that.textChangedEventCB(that, that.getText());
                     }
                 };
-                window.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
+                this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
 
                 this.focusEventListener = function (e) {
                     that.currentText = e.detail.text;
@@ -405,26 +413,28 @@ var GhostText;
                         that.focusEventCB(that);
                     }
                 };
-                window.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
+                this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
 
                 this.beforeUnloadListener = function (e) {
                     if (that.unloadEventCB) {
                         that.unloadEventCB(that);
                     }
                 };
-                window.addEventListener('beforeunload', this.beforeUnloadListener);
+                this.jsCodeEditorDiv.addEventListener('beforeunload', this.beforeUnloadListener);
 
                 this.highlight();
             };
 
             JSCodeEditor.prototype.unbind = function () {
-                window.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
-                window.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
-                window.removeEventListener('beforeunload', this.beforeUnloadListener);
+                this.jsCodeEditorDiv.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
+                this.jsCodeEditorDiv.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
+                this.jsCodeEditorDiv.removeEventListener('beforeunload', this.beforeUnloadListener);
                 this.removeHighlight();
             };
 
             JSCodeEditor.prototype.focus = function () {
+                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get('GhostTextDoFocus', {});
+                window.dispatchEvent(gtDoFocusEvent);
             };
 
             JSCodeEditor.prototype.textChangedEvent = function (callback) {
@@ -452,10 +462,14 @@ var GhostText;
             };
 
             JSCodeEditor.prototype.setText = function (text) {
+                if (this.currentText == text) {
+                    return;
+                }
+
                 this.currentText = text;
                 var details = { detail: { text: this.currentText } };
                 var gtServerInputEvent = InputArea.StandardsCustomEvent.get('GhostTextServerInput', details);
-                window.dispatchEvent(gtServerInputEvent);
+                this.jsCodeEditorDiv.dispatchEvent(gtServerInputEvent);
             };
 
             JSCodeEditor.prototype.getSelections = function () {
