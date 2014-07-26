@@ -1,6 +1,23 @@
 var GhostText;
 (function (GhostText) {
     (function (InputArea) {
+        var StandardsCustomEvent = (function () {
+            function StandardsCustomEvent() {
+            }
+            StandardsCustomEvent.get = function (eventType, data) {
+                var customEvent = CustomEvent;
+                var event = new customEvent(eventType, data);
+                return event;
+            };
+            return StandardsCustomEvent;
+        })();
+        InputArea.StandardsCustomEvent = StandardsCustomEvent;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
         var Selection = (function () {
             function Selection(start, end) {
                 if (typeof start === "undefined") { start = 0; }
@@ -96,7 +113,7 @@ var GhostText;
                 }
 
                 this.addAceElements(document);
-                this.addTextAreas(document);
+
                 this.addContentEditableElements(document);
 
                 if (this.inputAreaElements.length === 0) {
@@ -144,25 +161,37 @@ var GhostText;
                     var aceEditor = aceEditors[i];
                     var id = aceEditor.getAttribute('id');
                     this.injectScript(document, this.buildAceScript(id));
+                    var inputArea = new InputArea.JSCodeEditor();
+                    inputArea.bind(aceEditor);
+                    this.inputAreaElements.push(inputArea);
                 }
             };
 
             Detector.prototype.buildAceScript = function (id) {
                 return [
                     '(function() {',
-                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id, '")).getSession();',
-                    'var body = document.getElementsByTagName("body")[0];',
-                    'var textArea = document.createElement("textarea");',
-                    'textArea.setAttribute("id", "ghost-text-ace-text-area-', id, '");',
-                    'textArea.setAttribute("class", "ghost-text-ace-text-area");',
-                    'textArea.innerText = ghostTextAceEditor.getValue();',
-                    'body.appendChild(textArea);',
-                    'ghostTextAceEditor.on("change", function(e) {',
-                    'textArea.value = ghostTextAceEditor.getValue();',
+                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id, '"));',
+                    'var ghostTextAceEditorSession = ace.edit(document.querySelector("#', id, '")).getSession();',
+                    'window.addEventListener("GhostTextServerInput", function (e) {',
+                    'console.log("window.addEventListener > GhostTextServerInput");',
+                    'console.log(["GhostTextServerInput", e, e.detail]);',
+                    'ghostTextAceEditorSession.setValue(e.detail.text);',
+                    '}, false);',
+                    'ghostTextAceEditorSession.on("change", function(e) {',
+                    'console.log("ghostTextAceEditor.on > change");',
+                    'var value = ghostTextAceEditorSession.getValue();',
+                    'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
+                    'window.dispatchEvent(inputEvent);',
                     '});',
-                    'textArea.addEventListener("input", function (e) { ghostTextAceEditor.setValue(textArea.value) }, false);',
+                    'var focusEvent = document.createEvent("CustomEvent");',
+                    'focusEvent.initEvent("GhostTextJSCodeEditorFocus", false, false);',
+                    'ghostTextAceEditor.on("focus", function(e) {',
+                    'var value = ghostTextAceEditorSession.getValue();',
+                    'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
+                    'window.dispatchEvent(focusEvent);',
+                    '});',
                     '})();'
-                ].join('');
+                ].join('\n');
             };
 
             Detector.prototype.trySingleElement = function () {
@@ -194,6 +223,7 @@ var GhostText;
             };
 
             Detector.prototype.injectScript = function (document, javaScript) {
+                console.log(['injectScript', javaScript]);
                 var head = document.getElementsByTagName('head')[0];
                 var script = document.createElement('script');
                 script.setAttribute('type', 'text/javascript');
@@ -209,18 +239,6 @@ var GhostText;
 var GhostText;
 (function (GhostText) {
     (function (InputArea) {
-        var StandardsCustomEvent = (function () {
-            function StandardsCustomEvent() {
-            }
-            StandardsCustomEvent.get = function (eventType, data) {
-                var customEvent = CustomEvent;
-                var event = new customEvent(eventType, data);
-                return event;
-            };
-            return StandardsCustomEvent;
-        })();
-        InputArea.StandardsCustomEvent = StandardsCustomEvent;
-
         var TextArea = (function () {
             function TextArea() {
                 this.textArea = null;
@@ -247,6 +265,12 @@ var GhostText;
                 this.textArea.addEventListener('focus', this.focusEventListener, false);
 
                 this.inputEventListener = function (e) {
+                    if (e.detail && e.detail['generatedByGhostText']) {
+                        return;
+                    }
+
+                    console.log(e);
+
                     if (that.textChangedEventCB) {
                         that.textChangedEventCB(that, that.getText());
                     }
@@ -267,7 +291,7 @@ var GhostText;
                 };
                 window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-                this.customEvent = StandardsCustomEvent.get('CustomEvent', { detail: { generatedByGhostText: true } });
+                this.customEvent = InputArea.StandardsCustomEvent.get('input', { detail: { generatedByGhostText: true } });
 
                 this.highlight();
             };
@@ -343,6 +367,116 @@ var GhostText;
             return TextArea;
         })();
         InputArea.TextArea = TextArea;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
+        var JSCodeEditor = (function () {
+            function JSCodeEditor() {
+                this.textChangedEventCB = null;
+                this.selectionChangedEventCB = null;
+                this.removeEventCB = null;
+                this.focusEventCB = null;
+                this.unloadEventCB = null;
+                this.inputEventListener = null;
+                this.focusEventListener = null;
+                this.beforeUnloadListener = null;
+                this.elementRemovedListener = null;
+                this.currentText = '';
+            }
+            JSCodeEditor.prototype.bind = function (domElement) {
+                var that = this;
+
+                this.inputEventListener = function (e) {
+                    that.currentText = e.detail.text;
+
+                    if (that.textChangedEventCB) {
+                        that.textChangedEventCB(that, that.getText());
+                    }
+                };
+                window.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
+
+                this.focusEventListener = function (e) {
+                    that.currentText = e.detail.text;
+
+                    if (that.focusEventCB) {
+                        that.focusEventCB(that);
+                    }
+                };
+                window.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
+
+                this.beforeUnloadListener = function (e) {
+                    if (that.unloadEventCB) {
+                        that.unloadEventCB(that);
+                    }
+                };
+                window.addEventListener('beforeunload', this.beforeUnloadListener);
+
+                this.highlight();
+            };
+
+            JSCodeEditor.prototype.unbind = function () {
+                window.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
+                window.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
+                window.removeEventListener('beforeunload', this.beforeUnloadListener);
+                this.removeHighlight();
+            };
+
+            JSCodeEditor.prototype.focus = function () {
+            };
+
+            JSCodeEditor.prototype.textChangedEvent = function (callback) {
+                this.textChangedEventCB = callback;
+            };
+
+            JSCodeEditor.prototype.selectionChangedEvent = function (callback) {
+                this.selectionChangedEventCB = callback;
+            };
+
+            JSCodeEditor.prototype.removeEvent = function (callback) {
+                this.removeEventCB = callback;
+            };
+
+            JSCodeEditor.prototype.focusEvent = function (callback) {
+                this.focusEventCB = callback;
+            };
+
+            JSCodeEditor.prototype.unloadEvent = function (callback) {
+                this.unloadEventCB = callback;
+            };
+
+            JSCodeEditor.prototype.getText = function () {
+                return this.currentText;
+            };
+
+            JSCodeEditor.prototype.setText = function (text) {
+                this.currentText = text;
+                var details = { detail: { text: this.currentText } };
+                var gtServerInputEvent = InputArea.StandardsCustomEvent.get('GhostTextServerInput', details);
+                window.dispatchEvent(gtServerInputEvent);
+            };
+
+            JSCodeEditor.prototype.getSelections = function () {
+                return new InputArea.Selections([new InputArea.Selection()]);
+            };
+
+            JSCodeEditor.prototype.setSelections = function (selections) {
+            };
+
+            JSCodeEditor.prototype.buildChange = function () {
+                return new InputArea.TextChange(this.getText(), this.getSelections().getAll());
+            };
+
+            JSCodeEditor.prototype.highlight = function () {
+            };
+
+            JSCodeEditor.prototype.removeHighlight = function () {
+            };
+            return JSCodeEditor;
+        })();
+        InputArea.JSCodeEditor = JSCodeEditor;
     })(GhostText.InputArea || (GhostText.InputArea = {}));
     var InputArea = GhostText.InputArea;
 })(GhostText || (GhostText = {}));

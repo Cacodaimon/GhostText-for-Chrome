@@ -8,12 +8,14 @@ module.exports = function (grunt) {
     typescript: {
       base: {
         src: [
+            'scripts/InputArea/StandardsCustomEvent.ts',
             'scripts/InputArea/Selection.ts',
             'scripts/InputArea/Selections.ts',
             'scripts/InputArea/TextChange.ts',
             'scripts/InputArea/IInputArea.ts',
             'scripts/InputArea/Detector.ts',
             'scripts/InputArea/TextArea.ts',
+            'scripts/InputArea/JSCodeEditor.ts',
             'scripts/InputArea/ContentEditable.ts'
         ],
         dest: 'scripts/input-area.js',

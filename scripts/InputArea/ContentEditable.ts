@@ -1,4 +1,3 @@
-/// <reference path="../../vendor/jquery.d.ts" />
 
 module GhostText.InputArea {
     /**

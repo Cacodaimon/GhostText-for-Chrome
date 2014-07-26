@@ -1,17 +1,13 @@
+
 module GhostText.InputArea {
 
     /**
-     * Implementation for a text area element.
+     * Implementation for a JS code editor signaling through window events to the content script.
      *
      * @licence The MIT License (MIT)
      * @author Guido Krömer <mail 64 cacodaemon 46 de>
      */
-    export class TextArea implements IInputArea {
-
-        /**
-         * The bind HTML text area element.
-         */
-        private textArea: HTMLTextAreaElement = null;
+    export class JSCodeEditor implements IInputArea {
 
         /**
          * Callback fired on an input event.
@@ -41,11 +37,6 @@ module GhostText.InputArea {
         /**
          * Custom event fired on text change.
          */
-        private customEvent: Event = null;
-
-        /**
-         * Custom event fired on text change.
-         */
         private inputEventListener: EventListener = null;
 
         /**
@@ -59,42 +50,36 @@ module GhostText.InputArea {
         private beforeUnloadListener: EventListener = null;
 
         /**
-         * Fired when the elements get removd from dom.
+         * Fired when the elements get removed from dom.
          */
         private elementRemovedListener: EventListener = null;
 
+        /**
+         * The elements current text.
+         */
+        private currentText: string = '';
+
         public bind(domElement: HTMLElement): void {
-            this.textArea = <HTMLTextAreaElement>domElement;
             var that = this;
 
-            this.focusEventListener = function (e) {
+            this.inputEventListener = function (e: CustomEvent) {
+                that.currentText = e.detail.text;
+
+                if (that.textChangedEventCB) {
+                    that.textChangedEventCB(that, that.getText());
+                }
+            };
+            window.addEventListener('GhostTextJSCodeEditorInput', this.inputEventListener, false);
+
+
+            this.focusEventListener = function (e: CustomEvent) {
+                that.currentText = e.detail.text;
+
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
             };
-            this.textArea.addEventListener('focus', this.focusEventListener, false);
-
-            this.inputEventListener = function (e: UIEvent) {
-                if (e.detail && e.detail['generatedByGhostText']) {
-                    return;
-                }
-
-                console.log(e);
-
-                if (that.textChangedEventCB) {
-                    that.textChangedEventCB(that, that.getText());
-                }
-            };
-            this.textArea.addEventListener('input', this.inputEventListener, false);
-
-            //TODO Selection changed
-
-            this.elementRemovedListener = function (e) {
-                if (that.textChangedEventCB) {
-                    that.textChangedEventCB(that, that.getText());
-                }
-            };
-            this.textArea.addEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener, false);
+            window.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
 
             this.beforeUnloadListener = function (e) {
                 if (that.unloadEventCB) {
@@ -103,26 +88,18 @@ module GhostText.InputArea {
             };
             window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-            this.customEvent = <Event>StandardsCustomEvent.get('input',  { detail: { generatedByGhostText: true} });
-
             this.highlight();
         }
 
         public unbind(): void {
-            this.textArea.removeEventListener('focus', this.focusEventListener);
-            this.textArea.removeEventListener('input', this.inputEventListener);
-            this.textArea.removeEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener);
+            window.removeEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener);
+            window.removeEventListener('GhostTextJSCodeEditorInput', this.inputEventListener);
             window.removeEventListener('beforeunload', this.beforeUnloadListener);
             this.removeHighlight();
         }
 
         public focus(): void {
-            this.textArea.focus();
-
-            var that = this;
-            if (this.focusEventCB) {
-                that.focusEventCB(that);
-            }
+            //TODO
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
@@ -146,26 +123,22 @@ module GhostText.InputArea {
         }
 
         public getText(): string {
-            return this.textArea.value;
+            return this.currentText;
         }
 
         public setText(text: string): void {
-            this.textArea.value = text;
-
-            this.textArea.dispatchEvent(this.customEvent);
+            this.currentText = text;
+            var details = { detail: { text: this.currentText} };
+            var gtServerInputEvent = <Event>StandardsCustomEvent.get('GhostTextServerInput', details);
+            window.dispatchEvent(gtServerInputEvent);
         }
 
         public getSelections(): Selections {
-            return new Selections([new Selection(
-                this.textArea.selectionStart,
-                this.textArea.selectionEnd
-            )]);
+            return new Selections([new Selection()]);
         }
 
         public setSelections(selections: Selections): void {
-            var selection: Selection = selections.getMinMaxSelection();
-            this.textArea.selectionStart = selection.start;
-            this.textArea.selectionEnd   = selection.end;
+            //TODO
         }
 
         public buildChange(): TextChange {
@@ -179,14 +152,14 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            this.textArea.setAttribute('style', 'transition: box-shadow 1s cubic-bezier(.25,2,.5,1); boxShadow: "#00ADEE" 0 0 20px 5px inset');
+            //TODO
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            this.textArea.setAttribute('style', '');
+            //TODO
         }
     }
 }

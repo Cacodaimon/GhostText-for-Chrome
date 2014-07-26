@@ -32,7 +32,7 @@ module GhostText.InputArea {
             }
 
             this.addAceElements(document);
-            this.addTextAreas(document);
+            //this.addTextAreas(document);
             this.addContentEditableElements(document);
 
             if (this.inputAreaElements.length === 0) {
@@ -68,7 +68,7 @@ module GhostText.InputArea {
             for (var i = 0; i < textAreas.length; i++) {
                 var inputArea = new TextArea();
                 inputArea.bind(textAreas[i]);
-                this.inputAreaElements.push(inputArea)
+                this.inputAreaElements.push(inputArea);
             }
         }
 
@@ -84,7 +84,7 @@ module GhostText.InputArea {
                 console.log(contentEditables[i]);
                 var inputArea = new ContentEditable();
                 inputArea.bind(<HTMLDivElement>contentEditables[i]);
-                this.inputAreaElements.push(inputArea)
+                this.inputAreaElements.push(inputArea);
             }
         }
 
@@ -95,6 +95,9 @@ module GhostText.InputArea {
                 var aceEditor: HTMLDivElement = <HTMLDivElement>aceEditors[i];
                 var id: string = aceEditor.getAttribute('id');
                 this.injectScript(document, this.buildAceScript(id));
+                var inputArea = new JSCodeEditor();
+                inputArea.bind(aceEditor);
+                this.inputAreaElements.push(inputArea);
             }
         }
 
@@ -107,22 +110,33 @@ module GhostText.InputArea {
         private buildAceScript(id): string {
             return [
                 '(function() {',
-                    'var customInputEvent = new CustomEvent("input", {detail: {generatedByGhostTextAceWorkaround: true}});',
-                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id,'")).getSession();',
-                    'var body = document.getElementsByTagName("body")[0];',
-                    'var textArea = document.createElement("textarea");',
-                    'textArea.setAttribute("id", "ghost-text-ace-text-area-', id, '");',
-                    'textArea.setAttribute("class", "ghost-text-ace-text-area");',
-                    'textArea.innerText = ghostTextAceEditor.getValue();',
-                    'body.appendChild(textArea);',
-                    'ghostTextAceEditor.on("change", function(e) {',
-                        'textArea.value = ghostTextAceEditor.getValue();',
-                    '});',
-                    'textArea.addEventListener("input", function (e) {',
-                        'ghostTextAceEditor.setValue(textArea.value);',
+                    'var ghostTextAceEditor = ace.edit(document.querySelector("#', id,'"));',
+                    'var ghostTextAceEditorSession = ace.edit(document.querySelector("#', id,'")).getSession();',
+
+                    'window.addEventListener("GhostTextServerInput", function (e) {',
+                        'console.log("window.addEventListener > GhostTextServerInput");',
+                        'console.log(["GhostTextServerInput", e, e.detail]);',
+                        'ghostTextAceEditorSession.setValue(e.detail.text);',
                     '}, false);',
+
+                    'ghostTextAceEditorSession.on("change", function(e) {',
+                        'console.log("ghostTextAceEditor.on > change");',
+                        'var value = ghostTextAceEditorSession.getValue();',
+                        'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
+                        'window.dispatchEvent(inputEvent);',
+                    '});',
+
+                    'var focusEvent = document.createEvent("CustomEvent");',
+                    'focusEvent.initEvent("GhostTextJSCodeEditorFocus", false, false);',
+
+                    'ghostTextAceEditor.on("focus", function(e) {',
+                        'var value = ghostTextAceEditorSession.getValue();',
+                        'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
+                        'window.dispatchEvent(focusEvent);',
+                    '});',
+
                 '})();'
-            ].join('');
+            ].join('\n');
         }
 
         /**
@@ -167,6 +181,7 @@ module GhostText.InputArea {
          * @param javaScript The script to inject as string.
          */
         private injectScript(document: HTMLDocument, javaScript: string): void {
+            console.log(['injectScript', javaScript]);
             var head: HTMLHeadElement = document.getElementsByTagName('head')[0];
             var script: HTMLScriptElement = document.createElement('script');
             script.setAttribute('type', 'text/javascript');
