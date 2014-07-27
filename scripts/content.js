@@ -109,16 +109,6 @@ var GhostTextContent = {
     },
 
     /**
-     * Hides any messages on screen
-     * @private
-     * @static
-     */
-    hideMessages: function () {
-        console.log('GhostText: Hiding messages');
-        GThumane.remove();
-    },
-
-    /**
      * Gets how long a message needs to stay on screen
      *
      * @param  {string} message Message to display
@@ -163,7 +153,13 @@ var GhostTextContent = {
             GhostTextContent.port = chrome.runtime.connect({name: 'GhostText'});
             GhostTextContent.reportFieldData(); //Report initial content of field
         });
-        detector.detect(document);
+
+        var countElementsFound = detector.detect(document);
+        if (countElementsFound === 0) {
+            GhostTextContent.alertUser('No text area elements on this page');
+        } else if (countElementsFound > 1) {
+            GhostTextContent.informUser('There are multiple text areas on this page. \n Click on the one you want to use.', true);
+        }
     },
 
     /**
