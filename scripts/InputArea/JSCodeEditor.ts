@@ -92,6 +92,8 @@ module GhostText.InputArea {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
+
+                that.highlight();
             };
             this.jsCodeEditorDiv.addEventListener('GhostTextJSCodeEditorFocus', this.focusEventListener, false);
 
@@ -101,8 +103,6 @@ module GhostText.InputArea {
                 }
             };
             this.jsCodeEditorDiv.addEventListener('beforeunload', this.beforeUnloadListener);
-
-            this.highlight();
         }
 
         public unbind(): void {
@@ -114,7 +114,7 @@ module GhostText.InputArea {
 
         public focus(): void {
             var gtDoFocusEvent = <Event>StandardsCustomEvent.get('GhostTextDoFocus', {});
-            window.dispatchEvent(gtDoFocusEvent);
+            this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {

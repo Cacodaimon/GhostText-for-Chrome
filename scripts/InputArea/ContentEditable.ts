@@ -62,6 +62,8 @@ module GhostText.InputArea {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
+
+                that.highlight();
             };
             this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
 
@@ -78,8 +80,6 @@ module GhostText.InputArea {
                 }
             };
             window.addEventListener('beforeunload', this.beforeUnloadListener);
-
-            this.highlight();
         }
 
         public unbind(): void {
@@ -90,13 +90,11 @@ module GhostText.InputArea {
         }
 
         public focus(): void {
-            console.log('focus');
             this.contentEditableElement.focus();
 
-            var that = this;
-            if (this.focusEventCB) {
-                that.focusEventCB(that);
-            }
+           // if (this.focusEventCB) {
+           //     this.focusEventCB(this);
+           // }
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {

@@ -36,7 +36,7 @@ module GhostText.InputArea {
             this.addContentEditableElements(document);
 
             if (this.inputAreaElements.length === 0) {
-                throw 'No supported elements found!';
+                return 0;
             }
 
             if (this.trySingleElement()) {
@@ -122,6 +122,7 @@ module GhostText.InputArea {
                     '}, false);',
 
                     'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
+                        'alert("TTF");',
                         'ghostTextAceEditor.focus();',
                     '});',
 

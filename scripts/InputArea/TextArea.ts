@@ -71,6 +71,8 @@ module GhostText.InputArea {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
+
+                that.highlight();
             };
             this.textArea.addEventListener('focus', this.focusEventListener, false);
 
@@ -102,8 +104,6 @@ module GhostText.InputArea {
             window.addEventListener('beforeunload', this.beforeUnloadListener);
 
             this.customEvent = <Event>StandardsCustomEvent.get('input',  { detail: { generatedByGhostText: true} });
-
-            this.highlight();
         }
 
         public unbind(): void {
@@ -117,9 +117,8 @@ module GhostText.InputArea {
         public focus(): void {
             this.textArea.focus();
 
-            var that = this;
             if (this.focusEventCB) {
-                that.focusEventCB(that);
+                this.focusEventCB(this);
             }
         }
 
