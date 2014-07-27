@@ -134,7 +134,7 @@ var GhostText;
             };
 
             Detector.prototype.addTextAreas = function (document) {
-                var textAreas = document.body.getElementsByTagName('textarea');
+                var textAreas = document.body.querySelectorAll('textarea:not(.ace_text-input)');
 
                 for (var i = 0; i < textAreas.length; i++) {
                     var inputArea = new InputArea.TextArea();
@@ -163,7 +163,7 @@ var GhostText;
                         id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                         aceEditor.setAttribute('id', id);
                     }
-                    this.injectScript(document, this.buildAceScript(id));
+                    this.injectScript(document, this.buildAceScript(id), id);
                     var inputArea = new InputArea.JSCodeEditor();
                     inputArea.bind(aceEditor);
                     this.inputAreaElements.push(inputArea);
@@ -235,10 +235,16 @@ var GhostText;
                 }
             };
 
-            Detector.prototype.injectScript = function (document, javaScript) {
+            Detector.prototype.injectScript = function (document, javaScript, id) {
+                if (document.getElementById('ghost-text-injected-script-' + id) !== null) {
+                    return;
+                }
+
                 var head = document.getElementsByTagName('head')[0];
                 var script = document.createElement('script');
                 script.setAttribute('type', 'text/javascript');
+                script.setAttribute('class', 'ghost-text-injected-script');
+                script.setAttribute('id', 'ghost-text-injected-script-' + id);
                 script.innerText = javaScript;
                 head.appendChild(script);
             };

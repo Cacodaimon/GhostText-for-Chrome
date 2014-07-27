@@ -63,11 +63,11 @@ module GhostText.InputArea {
          * @param document
          */
         private addTextAreas(document: HTMLDocument): void {
-            var textAreas: NodeListOf<HTMLTextAreaElement> = document.body.getElementsByTagName('textarea:not(.ace_text-input)');
+            var textAreas: NodeList = document.body.querySelectorAll('textarea:not(.ace_text-input)');
 
             for (var i = 0; i < textAreas.length; i++) {
                 var inputArea = new TextArea();
-                inputArea.bind(textAreas[i]);
+                inputArea.bind(<HTMLTextAreaElement>textAreas[i]);
                 this.inputAreaElements.push(inputArea);
             }
         }
@@ -97,7 +97,7 @@ module GhostText.InputArea {
                     id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                     aceEditor.setAttribute('id', id);
                 }
-                this.injectScript(document, this.buildAceScript(id));
+                this.injectScript(document, this.buildAceScript(id), id);
                 var inputArea = new JSCodeEditor();
                 inputArea.bind(aceEditor);
                 this.inputAreaElements.push(inputArea);
@@ -195,11 +195,18 @@ module GhostText.InputArea {
          *
          * @param document The DOM document.
          * @param javaScript The script to inject as string.
+         * @param id The script tag's id.
          */
-        private injectScript(document: HTMLDocument, javaScript: string): void {
+        private injectScript(document: HTMLDocument, javaScript: string, id: string): void {
+            if (document.getElementById('ghost-text-injected-script-' + id) !== null) {
+                return;
+            }
+
             var head: HTMLHeadElement = document.getElementsByTagName('head')[0];
             var script: HTMLScriptElement = document.createElement('script');
             script.setAttribute('type', 'text/javascript');
+            script.setAttribute('class', 'ghost-text-injected-script');
+            script.setAttribute('id', 'ghost-text-injected-script-' + id);
             script.innerText = javaScript;
             head.appendChild(script);
         }
