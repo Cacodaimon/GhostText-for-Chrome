@@ -113,6 +113,7 @@ var GhostText;
                 }
 
                 this.addAceElements(document);
+                this.addCodeMirrorElements(document);
                 this.addTextAreas(document);
                 this.addContentEditableElements(document);
 
@@ -178,9 +179,8 @@ var GhostText;
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
                     'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
                     'ghostTextAceEditorSession.setValue(e.detail.text);',
-                    '}, false);',
+                    '});',
                     'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                    'alert("TTF");',
                     'ghostTextAceEditor.focus();',
                     '});',
                     'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
@@ -203,6 +203,58 @@ var GhostText;
                     'var value = ghostTextAceEditorSession.getValue();',
                     'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
                     'ghostTextAceDiv.dispatchEvent(focusEvent);',
+                    '});',
+                    '})();'
+                ].join('');
+            };
+
+            Detector.prototype.addCodeMirrorElements = function (document) {
+                var codeMirrorEditors = document.body.querySelectorAll('.CodeMirror');
+
+                for (var i = 0; i < codeMirrorEditors.length; i++) {
+                    var codeMirrorEditor = codeMirrorEditors[i];
+                    var id = codeMirrorEditor.getAttribute('id');
+                    if (id === null) {
+                        id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
+                        codeMirrorEditor.setAttribute('id', id);
+                    }
+                    this.injectScript(document, this.buildCodeMirrorScript(id), id);
+                    var inputArea = new InputArea.JSCodeEditor();
+                    inputArea.bind(codeMirrorEditor);
+                    this.inputAreaElements.push(inputArea);
+                }
+            };
+
+            Detector.prototype.buildCodeMirrorScript = function (id) {
+                return [
+                    '(function() {',
+                    'var ghostTextCodeMirrorDiv = document.querySelector("#', id, '");',
+                    'var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;',
+                    'console.log([ghostTextCodeMirrorDiv, ghostTextCodeMirrorEditor]);',
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerInput", function (e) {',
+                    'ghostTextCodeMirrorEditor.doc.setValue(e.detail.text);',
+                    '});',
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoFocus", function(e) {',
+                    'ghostTextCodeMirrorEditor.focus();',
+                    '});',
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoHighlight", function(e) {',
+                    'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
+                    'ghostTextCodeMirrorSizerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
+                    'ghostTextCodeMirrorSizerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
+                    '});',
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
+                    'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
+                    'ghostTextCodeMirrorSizerDiv.style.boxShadow = "";',
+                    '});',
+                    'ghostTextCodeMirrorEditor.on("change", function(e) {',
+                    'var value = e.doc.getValue();',
+                    'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
+                    'ghostTextCodeMirrorDiv.dispatchEvent(inputEvent);',
+                    '});',
+                    'ghostTextCodeMirrorEditor.on("focus", function(e) {',
+                    'var value = e.doc.getValue();',
+                    'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
+                    'ghostTextCodeMirrorDiv.dispatchEvent(focusEvent);',
                     '});',
                     '})();'
                 ].join('');
