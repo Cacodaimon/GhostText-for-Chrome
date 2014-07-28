@@ -152,8 +152,6 @@ module GhostText.InputArea {
                     '});',
                 '})();'
             ].join('');
-
-            //TODO unbind on readd, maybe this[i].parentElement.removeChild(this[i]); + DOMNodeRemovedFromDocument…
         }
 
         /**

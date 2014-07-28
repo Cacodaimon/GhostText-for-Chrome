@@ -57,9 +57,8 @@ module GhostText.InputArea {
          * Builds a Selections instance form a untyped JS object.
          *
          * @param selections
-         * @return {GhostText.InputArea.Selections}
          */
-        public static fromPlainJS(selections: Array<any>)
+        public static fromPlainJS(selections: Array<any>): Selections
         {
             var newSelections: Array<Selection> = [];
 

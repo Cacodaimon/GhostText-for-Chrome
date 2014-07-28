@@ -117,7 +117,7 @@ var GhostText;
                 this.addContentEditableElements(document);
 
                 if (this.inputAreaElements.length === 0) {
-                    return 1;
+                    return 0;
                 }
 
                 if (this.trySingleElement()) {
@@ -276,7 +276,7 @@ var GhostText;
                 this.textArea = domElement;
                 var that = this;
 
-                this.focusEventListener = function (e) {
+                this.focusEventListener = function () {
                     if (that.focusEventCB) {
                         that.focusEventCB(that);
                     }
@@ -296,14 +296,14 @@ var GhostText;
                 };
                 this.textArea.addEventListener('input', this.inputEventListener, false);
 
-                this.elementRemovedListener = function (e) {
+                this.elementRemovedListener = function () {
                     if (that.textChangedEventCB) {
                         that.textChangedEventCB(that, that.getText());
                     }
                 };
                 this.textArea.addEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener, false);
 
-                this.beforeUnloadListener = function (e) {
+                this.beforeUnloadListener = function () {
                     if (that.unloadEventCB) {
                         that.unloadEventCB(that);
                     }
@@ -536,7 +536,7 @@ var GhostText;
                 this.contentEditableElement = domElement;
                 var that = this;
 
-                this.focusEventListener = function (e) {
+                this.focusEventListener = function () {
                     if (that.focusEventCB) {
                         that.focusEventCB(that);
                     }
@@ -545,14 +545,14 @@ var GhostText;
                 };
                 this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
 
-                this.inputEventListener = function (e) {
+                this.inputEventListener = function () {
                     if (that.textChangedEventCB) {
                         that.textChangedEventCB(that, that.getText());
                     }
                 };
                 this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
 
-                this.beforeUnloadListener = function (e) {
+                this.beforeUnloadListener = function () {
                     if (that.unloadEventCB) {
                         that.unloadEventCB(that);
                     }
@@ -611,9 +611,12 @@ var GhostText;
             };
 
             ContentEditable.prototype.highlight = function () {
+                this.contentEditableElement.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+                this.contentEditableElement.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
             };
 
             ContentEditable.prototype.removeHighlight = function () {
+                this.contentEditableElement.style.boxShadow = '';
             };
             return ContentEditable;
         })();

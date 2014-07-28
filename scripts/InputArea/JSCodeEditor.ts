@@ -2,7 +2,7 @@
 module GhostText.InputArea {
 
     /**
-     * Implementation for a JS code editor signaling through window events to the content script.
+     * Implementation for a JS code editor signaling through events to the content script.
      *
      * @licence The MIT License (MIT)
      * @author Guido Krömer <mail 64 cacodaemon 46 de>

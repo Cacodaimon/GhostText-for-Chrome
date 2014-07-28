@@ -58,7 +58,7 @@ module GhostText.InputArea {
             var that = this;
 
 
-            this.focusEventListener = function (e) {
+            this.focusEventListener = function () {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
@@ -67,14 +67,14 @@ module GhostText.InputArea {
             };
             this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
 
-            this.inputEventListener = function (e) {
+            this.inputEventListener = function () {
                 if (that.textChangedEventCB) {
                     that.textChangedEventCB(that, that.getText());
                 }
             };
             this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
 
-            this.beforeUnloadListener = function (e) {
+            this.beforeUnloadListener = function () {
                 if (that.unloadEventCB) {
                     that.unloadEventCB(that);
                 }
@@ -91,10 +91,6 @@ module GhostText.InputArea {
 
         public focus(): void {
             this.contentEditableElement.focus();
-
-           // if (this.focusEventCB) {
-           //     this.focusEventCB(this);
-           // }
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
@@ -126,11 +122,11 @@ module GhostText.InputArea {
         }
 
         public getSelections(): Selections {
-            return new Selections([]);
+            return new Selections([]); //not supported yet
         }
 
         public setSelections(selections: Selections): void {
-
+            //not supported yet
         }
 
         public buildChange(): TextChange {
@@ -144,14 +140,15 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            //TODO
+            this.contentEditableElement.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+            this.contentEditableElement.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            //TODO
+            this.contentEditableElement.style.boxShadow = '';
         }
     }
 }

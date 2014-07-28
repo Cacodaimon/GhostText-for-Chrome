@@ -67,7 +67,7 @@ module GhostText.InputArea {
             this.textArea = <HTMLTextAreaElement>domElement;
             var that = this;
 
-            this.focusEventListener = function (e) {
+            this.focusEventListener = function () {
                 if (that.focusEventCB) {
                     that.focusEventCB(that);
                 }
@@ -89,14 +89,14 @@ module GhostText.InputArea {
 
             //TODO Selection changed
 
-            this.elementRemovedListener = function (e) {
+            this.elementRemovedListener = function () {
                 if (that.textChangedEventCB) {
                     that.textChangedEventCB(that, that.getText());
                 }
             };
             this.textArea.addEventListener('DOMNodeRemovedFromDocument', this.elementRemovedListener, false);
 
-            this.beforeUnloadListener = function (e) {
+            this.beforeUnloadListener = function () {
                 if (that.unloadEventCB) {
                     that.unloadEventCB(that);
                 }
