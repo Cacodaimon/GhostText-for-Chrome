@@ -16,5 +16,17 @@ module GhostText.InputArea {
         public constructor(public start: number = 0, public end: number = 0) {
 
         }
+
+        /**
+         * Returns a plain JS object.
+         *
+         * @return {Array<any>}
+         */
+        public toJSON(): any {
+            return {
+                start: this.start,
+                end: this.end
+            };
+        }
     }
 }

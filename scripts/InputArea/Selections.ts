@@ -58,8 +58,7 @@ module GhostText.InputArea {
          *
          * @param selections
          */
-        public static fromPlainJS(selections: Array<any>): Selections
-        {
+        public static fromPlainJS(selections: Array<any>): Selections {
             var newSelections: Array<Selection> = [];
 
             for (var i = selections.length - 1; i >= 0; i--) {
@@ -69,8 +68,19 @@ module GhostText.InputArea {
             return new Selections(newSelections);
         }
 
-        public toJSON(): Array<Selection> {
-            return this.selections;
+        /**
+         * Returns a plain JS object.
+         *
+         * @return {Array<any>}
+         */
+        public toJSON(): Array<any> {
+            var returnValue: Array<any> = [];
+
+            for (var i = this.selections.length - 1; i >= 0; i--) {
+                returnValue.push(this.selections[i].toJSON());
+            }
+
+            return returnValue;
         }
     }
 }

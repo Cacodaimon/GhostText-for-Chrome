@@ -147,7 +147,7 @@ module GhostText.InputArea {
             }
 
             this.currentText = text;
-            var details = { detail: { text: this.currentText} };
+            var details = {detail: {text: this.currentText}};
             var gtServerInputEvent = <Event>StandardsCustomEvent.get('GhostTextServerInput', details);
             this.jsCodeEditorDiv.dispatchEvent(gtServerInputEvent);
         }
@@ -157,7 +157,9 @@ module GhostText.InputArea {
         }
 
         public setSelections(selections: Selections): void {
-            //TODO
+            var details = {detail: {selections: selections.toJSON()}};
+            var gtDoFocusEvent = <Event>StandardsCustomEvent.get('GhostTextServerSelectionChanged', details);
+            this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
         }
 
         public buildChange(): TextChange {

@@ -25,6 +25,12 @@ var GhostText;
                 this.start = start;
                 this.end = end;
             }
+            Selection.prototype.toJSON = function () {
+                return {
+                    start: this.start,
+                    end: this.end
+                };
+            };
             return Selection;
         })();
         InputArea.Selection = Selection;
@@ -69,7 +75,13 @@ var GhostText;
             };
 
             Selections.prototype.toJSON = function () {
-                return this.selections;
+                var returnValue = [];
+
+                for (var i = this.selections.length - 1; i >= 0; i--) {
+                    returnValue.push(this.selections[i].toJSON());
+                }
+
+                return returnValue;
             };
             return Selections;
         })();
@@ -174,14 +186,38 @@ var GhostText;
             Detector.prototype.buildAceScript = function (id) {
                 return [
                     '(function() {',
+                    'var offsetToPos = function(lines, offset) {',
+                    'var row = 0, pos = 0;',
+                    'while ( row < lines.length && pos + lines[row].length < offset) {',
+                    'pos += lines[row].length + 1; row++;',
+                    '}',
+                    'return {row: row, col: offset - pos};',
+                    '};',
                     'var ghostTextAceDiv = document.querySelector("#', id, '");',
                     'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
+                    'var Range = ace.require("ace/range").Range;',
                     'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
                     'ghostTextAceEditorSession.setValue(e.detail.text);',
                     '});',
                     'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
                     'ghostTextAceEditor.focus();',
+                    '});',
+                    'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
+                    'ghostTextAceEditorSession.selection.clearSelection();',
+                    'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
+                    'console.log(e.detail.selections.length);',
+                    'for (var i = 0; i < e.detail.selections.length; i++) {',
+                    'var selection = e.detail.selections[i];',
+                    'var start = offsetToPos(lines, selection.start);',
+                    'var end = offsetToPos(lines, selection.end);',
+                    'var range = new Range(start.row, start.col, end.row, end.col);',
+                    'if (i === 0) {',
+                    'ghostTextAceEditorSession.selection.addRange(range, true);',
+                    '} else {',
+                    'ghostTextAceEditorSession.selection.setSelectionRange(range, true);',
+                    '}',
+                    '}',
                     '});',
                     'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
                     'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
@@ -205,7 +241,7 @@ var GhostText;
                     'ghostTextAceDiv.dispatchEvent(focusEvent);',
                     '});',
                     '})();'
-                ].join('');
+                ].join('\n');
             };
 
             Detector.prototype.addCodeMirrorElements = function (document) {
@@ -548,6 +584,9 @@ var GhostText;
             };
 
             JSCodeEditor.prototype.setSelections = function (selections) {
+                var details = { detail: { selections: selections.toJSON() } };
+                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get('GhostTextServerSelectionChanged', details);
+                this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
             };
 
             JSCodeEditor.prototype.buildChange = function () {

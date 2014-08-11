@@ -61,7 +61,7 @@ module GhostText.InputArea {
         /**
          * Adds all text area elements found in the dom.
          *
-         * @param document
+         * @param document The HTML root node.
          */
         private addTextAreas(document: HTMLDocument): void {
             var textAreas: NodeList = document.body.querySelectorAll('textarea:not(.ace_text-input)');
@@ -76,7 +76,7 @@ module GhostText.InputArea {
         /**
          * Adds all content editable elements found in the dom.
          *
-         * @param document
+         * @param document The HTML root node.
          */
         private addContentEditableElements(document: HTMLDocument): void {
             var contentEditables: NodeList = document.body.querySelectorAll('[contenteditable=\'true\']');
@@ -88,6 +88,11 @@ module GhostText.InputArea {
             }
         }
 
+        /**
+         * Adds all ace editor elements found in the dom.
+         *
+         * @param document The HTML root node.
+         */
         private addAceElements(document: HTMLDocument): void {
             var aceEditors: NodeList = document.body.querySelectorAll('.ace_editor');
 
@@ -110,13 +115,22 @@ module GhostText.InputArea {
          *
          * @param id The ace editors id.
          * @return {string} The script to inject.
+         * @see https://groups.google.com/forum/#!topic/ace-discuss/-RVHHWZGkk8
          */
         private buildAceScript(id): string {
             return [
                 '(function() {',
+                    'var offsetToPos = function(lines, offset) {',
+                        'var row = 0, pos = 0;',
+                        'while ( row < lines.length && pos + lines[row].length < offset) {',
+                            'pos += lines[row].length + 1; row++;',
+                        '}',
+                        'return {row: row, col: offset - pos};',
+                    '};',
                     'var ghostTextAceDiv = document.querySelector("#', id,'");',
                     'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
+                    'var Range = ace.require("ace/range").Range;',
 
                     'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
                         'ghostTextAceEditorSession.setValue(e.detail.text);',
@@ -124,6 +138,23 @@ module GhostText.InputArea {
 
                     'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
                         'ghostTextAceEditor.focus();',
+                    '});',
+
+                    'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
+                        'ghostTextAceEditorSession.selection.clearSelection();',
+                        'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
+                        'console.log(e.detail.selections.length);',
+                        'for (var i = 0; i < e.detail.selections.length; i++) {',
+                            'var selection = e.detail.selections[i];',
+                            'var start = offsetToPos(lines, selection.start);',
+                            'var end = offsetToPos(lines, selection.end);',
+                            'var range = new Range(start.row, start.col, end.row, end.col);',
+                            'if (i === 0) {',
+                                'ghostTextAceEditorSession.selection.addRange(range, true);',
+                            '} else {',
+                                'ghostTextAceEditorSession.selection.setSelectionRange(range, true);',
+                            '}',
+                        '}',
                     '});',
 
                     'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
@@ -151,9 +182,14 @@ module GhostText.InputArea {
                         'ghostTextAceDiv.dispatchEvent(focusEvent);',
                     '});',
                 '})();'
-            ].join('');
+            ].join('\n');
         }
 
+        /**
+         * Adds all code mirror editor elements found in the dom.
+         *
+         * @param document The HTML root node.
+         */
         private addCodeMirrorElements(document: HTMLDocument): void {
             var codeMirrorEditors: NodeList = document.body.querySelectorAll('.CodeMirror');
 

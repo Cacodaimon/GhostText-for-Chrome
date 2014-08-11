@@ -219,20 +219,6 @@ var GhostTextContent = {
     },
 
     /**
-     * Updates content of the field with what was received
-     *
-     * @param  {object} data  The new text and selection details
-     * @private
-     * @static
-     */
-    updateFieldData: function(data) {
-        console.log('GhostText: updateFieldData()');
-
-        GhostTextContent.currentInputArea.setText(data.text);
-        GhostTextContent.currentInputArea.setSelections(Selections.fromPlainJS(data.selections));
-    },
-
-    /**
      * Ask the background script to close the connection
      *
      * @private
