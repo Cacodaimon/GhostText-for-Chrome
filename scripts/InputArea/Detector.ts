@@ -285,8 +285,8 @@ module GhostText.InputArea {
             if (this.inputAreaElements.length === 1) {
                 var inputArea: IInputArea = this.inputAreaElements[0];
                 inputArea.blur();
-                inputArea.focusEvent(that.onFocusCB);
                 inputArea.focus();
+                that.onFocusCB(inputArea);
 
                 return true;
             }
