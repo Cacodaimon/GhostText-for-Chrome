@@ -319,8 +319,9 @@ var GhostText;
                 if (this.inputAreaElements.length === 1) {
                     var inputArea = this.inputAreaElements[0];
                     inputArea.blur();
-                    inputArea.focusEvent(that.onFocusCB);
+
                     inputArea.focus();
+                    that.onFocusCB(inputArea);
 
                     return true;
                 }
