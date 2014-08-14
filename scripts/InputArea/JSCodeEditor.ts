@@ -62,7 +62,7 @@ module GhostText.InputArea {
         /**
          * The elements current text.
          */
-        private currentText: string = '';
+        private currentText: string = null;
 
         public bind(domElement: HTMLElement): void {
             this.jsCodeEditorDiv = <HTMLDivElement>domElement;

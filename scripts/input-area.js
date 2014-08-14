@@ -319,7 +319,6 @@ var GhostText;
                 if (this.inputAreaElements.length === 1) {
                     var inputArea = this.inputAreaElements[0];
                     inputArea.blur();
-
                     inputArea.focus();
                     that.onFocusCB(inputArea);
 
@@ -515,7 +514,7 @@ var GhostText;
                 this.focusEventListener = null;
                 this.beforeUnloadListener = null;
                 this.elementRemovedListener = null;
-                this.currentText = '';
+                this.currentText = null;
             }
             JSCodeEditor.prototype.bind = function (domElement) {
                 this.jsCodeEditorDiv = domElement;
