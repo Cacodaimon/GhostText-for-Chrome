@@ -25,6 +25,11 @@ module GhostText.InputArea {
         focus(): void;
 
         /**
+         * Blurs the element.
+         */
+        blur(): void;
+
+        /**
          * Binds a event fired when the element's text has been changed.
          *
          * @param callback

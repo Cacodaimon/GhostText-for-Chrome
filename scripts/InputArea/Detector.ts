@@ -140,6 +140,10 @@ module GhostText.InputArea {
                         'ghostTextAceEditor.focus();',
                     '});',
 
+                    'ghostTextAceDiv.addEventListener("GhostTextDoBlur", function(e) {',
+                        'ghostTextAceEditor.blur();',
+                    '});',
+
                     'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
                         'ghostTextAceEditorSession.selection.clearSelection();',
                         'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
@@ -228,6 +232,10 @@ module GhostText.InputArea {
                         'ghostTextCodeMirrorEditor.focus();',
                     '});',
 
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoBlur", function(e) {',
+                        'ghostTextCodeMirrorEditor.blur();',
+                    '});',
+
                     'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
                         'for (var i = 0; i < e.detail.selections.length; i++) {',
                             'var selection = e.detail.selections[i];',
@@ -276,6 +284,7 @@ module GhostText.InputArea {
             var that = this;
             if (this.inputAreaElements.length === 1) {
                 var inputArea: IInputArea = this.inputAreaElements[0];
+                inputArea.blur();
                 inputArea.focusEvent(that.onFocusCB);
                 inputArea.focus();
 
@@ -291,6 +300,7 @@ module GhostText.InputArea {
         private tryMultipleElements(): void {
             var that = this;
             for (var i = 0; i < this.inputAreaElements.length; i++) {
+                this.inputAreaElements[i].blur();
                 this.inputAreaElements[i].focusEvent(function (inputArea: IInputArea) {
                     for (var j = 0; j < that.inputAreaElements.length; j++) { //unbind all others
                         if (that.inputAreaElements[j] !== inputArea) {

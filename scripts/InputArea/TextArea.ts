@@ -122,6 +122,10 @@ module GhostText.InputArea {
             }
         }
 
+        public blur(): void {
+            this.textArea.blur();
+        }
+
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
             this.textChangedEventCB = callback;
         }

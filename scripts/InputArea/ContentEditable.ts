@@ -93,6 +93,10 @@ module GhostText.InputArea {
             this.contentEditableElement.focus();
         }
 
+        public blur() :void {
+            this.contentEditableElement.blur();
+        }
+
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
             this.textChangedEventCB = callback;
         }

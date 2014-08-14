@@ -117,6 +117,11 @@ module GhostText.InputArea {
             this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
         }
 
+        public blur(): void {
+            var gtDoBlurEvent = <Event>StandardsCustomEvent.get('GhostTextDoBlur', {});
+            this.jsCodeEditorDiv.dispatchEvent(gtDoBlurEvent);
+        }
+
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
             this.textChangedEventCB = callback;
         }

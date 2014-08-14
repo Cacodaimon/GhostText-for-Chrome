@@ -203,6 +203,9 @@ var GhostText;
                     'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
                     'ghostTextAceEditor.focus();',
                     '});',
+                    'ghostTextAceDiv.addEventListener("GhostTextDoBlur", function(e) {',
+                    'ghostTextAceEditor.blur();',
+                    '});',
                     'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
                     'ghostTextAceEditorSession.selection.clearSelection();',
                     'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
@@ -272,6 +275,9 @@ var GhostText;
                     'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoFocus", function(e) {',
                     'ghostTextCodeMirrorEditor.focus();',
                     '});',
+                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoBlur", function(e) {',
+                    'ghostTextCodeMirrorEditor.blur();',
+                    '});',
                     'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
                     'for (var i = 0; i < e.detail.selections.length; i++) {',
                     'var selection = e.detail.selections[i];',
@@ -312,6 +318,7 @@ var GhostText;
                 var that = this;
                 if (this.inputAreaElements.length === 1) {
                     var inputArea = this.inputAreaElements[0];
+                    inputArea.blur();
                     inputArea.focusEvent(that.onFocusCB);
                     inputArea.focus();
 
@@ -324,6 +331,7 @@ var GhostText;
             Detector.prototype.tryMultipleElements = function () {
                 var that = this;
                 for (var i = 0; i < this.inputAreaElements.length; i++) {
+                    this.inputAreaElements[i].blur();
                     this.inputAreaElements[i].focusEvent(function (inputArea) {
                         for (var j = 0; j < that.inputAreaElements.length; j++) {
                             if (that.inputAreaElements[j] !== inputArea) {
@@ -427,6 +435,10 @@ var GhostText;
                 if (this.focusEventCB) {
                     this.focusEventCB(this);
                 }
+            };
+
+            TextArea.prototype.blur = function () {
+                this.textArea.blur();
             };
 
             TextArea.prototype.textChangedEvent = function (callback) {
@@ -556,6 +568,11 @@ var GhostText;
                 this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
             };
 
+            JSCodeEditor.prototype.blur = function () {
+                var gtDoBlurEvent = InputArea.StandardsCustomEvent.get('GhostTextDoBlur', {});
+                this.jsCodeEditorDiv.dispatchEvent(gtDoBlurEvent);
+            };
+
             JSCodeEditor.prototype.textChangedEvent = function (callback) {
                 this.textChangedEventCB = callback;
             };
@@ -672,6 +689,10 @@ var GhostText;
 
             ContentEditable.prototype.focus = function () {
                 this.contentEditableElement.focus();
+            };
+
+            ContentEditable.prototype.blur = function () {
+                this.contentEditableElement.blur();
             };
 
             ContentEditable.prototype.textChangedEvent = function (callback) {
