@@ -28,7 +28,7 @@
             "suggested_key": {
                 "default": "Ctrl+Shift+K",
                 "mac": "Command+K",
-                "linux": "Ctrl+Shift+B"
+                "linux": "Ctrl+Shift+H"
             }
         }
     },
