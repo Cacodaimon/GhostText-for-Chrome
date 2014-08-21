@@ -25,4 +25,6 @@ $(document).ready(function () {
     serverPortInput.change(function () {
         optionsFormSaveBtn.attr('disabled', false);
     });
+
+    $('#ghost-text-version').text(chrome.runtime.getManifest().version);
 });
