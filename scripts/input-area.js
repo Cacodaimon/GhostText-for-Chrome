@@ -1,12 +1,32 @@
 var GhostText;
 (function (GhostText) {
     (function (InputArea) {
+        (function (Browser) {
+            Browser[Browser["Chrome"] = 0] = "Chrome";
+            Browser[Browser["Firefox"] = 1] = "Firefox";
+        })(InputArea.Browser || (InputArea.Browser = {}));
+        var Browser = InputArea.Browser;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
         var StandardsCustomEvent = (function () {
             function StandardsCustomEvent() {
             }
-            StandardsCustomEvent.get = function (eventType, data) {
+            StandardsCustomEvent.get = function (browser, eventType, data) {
+                if (browser == 1 /* Firefox */) {
+                    var cloned = cloneInto(data.detail, document.defaultView);
+                    var event = document.createEvent('CustomEvent');
+                    event.initCustomEvent(eventType, true, true, cloned);
+
+                    return event;
+                }
+
                 var customEvent = CustomEvent;
                 var event = new customEvent(eventType, data);
+
                 return event;
             };
             return StandardsCustomEvent;
@@ -115,9 +135,10 @@ var GhostText;
 (function (GhostText) {
     (function (InputArea) {
         var Detector = (function () {
-            function Detector() {
+            function Detector(browser) {
                 this.onFocusCB = null;
                 this.inputAreaElements = [];
+                this.browser = browser;
             }
             Detector.prototype.detect = function (document) {
                 if (this.onFocusCB === null) {
@@ -151,6 +172,7 @@ var GhostText;
 
                 for (var i = 0; i < textAreas.length; i++) {
                     var inputArea = new InputArea.TextArea();
+                    inputArea.setBrowser(this.browser);
                     inputArea.bind(textAreas[i]);
                     this.inputAreaElements.push(inputArea);
                 }
@@ -161,6 +183,7 @@ var GhostText;
 
                 for (var i = 0; i < contentEditables.length; i++) {
                     var inputArea = new InputArea.ContentEditable();
+                    inputArea.setBrowser(this.browser);
                     inputArea.bind(contentEditables[i]);
                     this.inputAreaElements.push(inputArea);
                 }
@@ -178,6 +201,7 @@ var GhostText;
                     }
                     this.injectScript(document, this.buildAceScript(id), id);
                     var inputArea = new InputArea.JSCodeEditor();
+                    inputArea.setBrowser(this.browser);
                     inputArea.bind(aceEditor);
                     this.inputAreaElements.push(inputArea);
                 }
@@ -193,7 +217,7 @@ var GhostText;
                     '}',
                     'return {row: row, col: offset - pos};',
                     '};',
-                    'var ghostTextAceDiv = document.querySelector("#', id, '");',
+                    'var ghostTextAceDiv = document.querySelector("#' + id + '");',
                     'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
                     'var Range = ace.require("ace/range").Range;',
@@ -258,6 +282,7 @@ var GhostText;
                     }
                     this.injectScript(document, this.buildCodeMirrorScript(id), id);
                     var inputArea = new InputArea.JSCodeEditor();
+                    inputArea.setBrowser(this.browser);
                     inputArea.bind(codeMirrorEditor);
                     this.inputAreaElements.push(inputArea);
                 }
@@ -266,7 +291,7 @@ var GhostText;
             Detector.prototype.buildCodeMirrorScript = function (id) {
                 return [
                     '(function() {',
-                    'var ghostTextCodeMirrorDiv = document.querySelector("#', id, '");',
+                    'var ghostTextCodeMirrorDiv = document.querySelector("#' + id + '");',
                     'var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;',
                     'console.log([ghostTextCodeMirrorDiv, ghostTextCodeMirrorEditor]);',
                     'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerInput", function (e) {',
@@ -354,7 +379,17 @@ var GhostText;
                 script.setAttribute('type', 'text/javascript');
                 script.setAttribute('class', 'ghost-text-injected-script');
                 script.setAttribute('id', 'ghost-text-injected-script-' + id);
-                script.innerText = javaScript;
+                switch (this.browser) {
+                    case 0 /* Chrome */:
+                        script.innerText = javaScript;
+                        break;
+                    case 1 /* Firefox */:
+                        script.text = javaScript;
+                        break;
+                    default:
+                        throw 'Unknown browser given!';
+                }
+
                 head.appendChild(script);
             };
             return Detector;
@@ -418,7 +453,7 @@ var GhostText;
                 };
                 window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-                this.customEvent = InputArea.StandardsCustomEvent.get('input', { detail: { generatedByGhostText: true } });
+                this.customEvent = InputArea.StandardsCustomEvent.get(this.browser, 'input', { detail: { generatedByGhostText: true } });
             };
 
             TextArea.prototype.unbind = function () {
@@ -483,6 +518,10 @@ var GhostText;
 
             TextArea.prototype.buildChange = function () {
                 return new InputArea.TextChange(this.getText(), this.getSelections().getAll());
+            };
+
+            TextArea.prototype.setBrowser = function (browser) {
+                this.browser = browser;
             };
 
             TextArea.prototype.highlight = function () {
@@ -564,12 +603,12 @@ var GhostText;
             };
 
             JSCodeEditor.prototype.focus = function () {
-                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get('GhostTextDoFocus', {});
+                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextDoFocus', { detail: null });
                 this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
             };
 
             JSCodeEditor.prototype.blur = function () {
-                var gtDoBlurEvent = InputArea.StandardsCustomEvent.get('GhostTextDoBlur', {});
+                var gtDoBlurEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextDoBlur', { detail: null });
                 this.jsCodeEditorDiv.dispatchEvent(gtDoBlurEvent);
             };
 
@@ -604,7 +643,7 @@ var GhostText;
 
                 this.currentText = text;
                 var details = { detail: { text: this.currentText } };
-                var gtServerInputEvent = InputArea.StandardsCustomEvent.get('GhostTextServerInput', details);
+                var gtServerInputEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextServerInput', details);
                 this.jsCodeEditorDiv.dispatchEvent(gtServerInputEvent);
             };
 
@@ -614,7 +653,7 @@ var GhostText;
 
             JSCodeEditor.prototype.setSelections = function (selections) {
                 var details = { detail: { selections: selections.toJSON() } };
-                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get('GhostTextServerSelectionChanged', details);
+                var gtDoFocusEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextServerSelectionChanged', details);
                 this.jsCodeEditorDiv.dispatchEvent(gtDoFocusEvent);
             };
 
@@ -622,13 +661,17 @@ var GhostText;
                 return new InputArea.TextChange(this.getText(), this.getSelections().getAll());
             };
 
+            JSCodeEditor.prototype.setBrowser = function (browser) {
+                this.browser = browser;
+            };
+
             JSCodeEditor.prototype.highlight = function () {
-                var gtDoHighlightEvent = InputArea.StandardsCustomEvent.get('GhostTextDoHighlight', {});
+                var gtDoHighlightEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextDoHighlight', { detail: null });
                 this.jsCodeEditorDiv.dispatchEvent(gtDoHighlightEvent);
             };
 
             JSCodeEditor.prototype.removeHighlight = function () {
-                var gtRemoveHighlightEvent = InputArea.StandardsCustomEvent.get('GhostTextRemoveHighlight', {});
+                var gtRemoveHighlightEvent = InputArea.StandardsCustomEvent.get(this.browser, 'GhostTextRemoveHighlight', { detail: null });
                 this.jsCodeEditorDiv.dispatchEvent(gtRemoveHighlightEvent);
             };
             return JSCodeEditor;
@@ -670,7 +713,12 @@ var GhostText;
                         that.textChangedEventCB(that, that.getText());
                     }
                 };
+
                 this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
+
+                if (this.browser === 1 /* Firefox */) {
+                    this.contentEditableElement.addEventListener('DOMCharacterDataModified', this.inputEventListener, false);
+                }
 
                 this.beforeUnloadListener = function () {
                     if (that.unloadEventCB) {
@@ -683,6 +731,11 @@ var GhostText;
             ContentEditable.prototype.unbind = function () {
                 this.contentEditableElement.removeEventListener('focus', this.focusEventListener);
                 this.contentEditableElement.removeEventListener('input', this.inputEventListener);
+
+                if (this.browser === 1 /* Firefox */) {
+                    this.contentEditableElement.removeEventListener('DOMCharacterDataModified', this.inputEventListener);
+                }
+
                 window.removeEventListener('beforeunload', this.beforeUnloadListener);
                 this.removeHighlight();
             };
@@ -720,6 +773,10 @@ var GhostText;
             };
 
             ContentEditable.prototype.setText = function (text) {
+                if (this.contentEditableElement.innerHTML === text) {
+                    return;
+                }
+
                 this.contentEditableElement.innerHTML = text;
             };
 
@@ -732,6 +789,10 @@ var GhostText;
 
             ContentEditable.prototype.buildChange = function () {
                 return new InputArea.TextChange(this.getText(), this.getSelections().getAll());
+            };
+
+            ContentEditable.prototype.setBrowser = function (browser) {
+                this.browser = browser;
             };
 
             ContentEditable.prototype.highlight = function () {

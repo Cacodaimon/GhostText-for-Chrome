@@ -63,6 +63,11 @@ module GhostText.InputArea {
          */
         private elementRemovedListener: EventListener = null;
 
+        /**
+         * The plugin's browser.
+         */
+        private browser: Browser;
+
         public bind(domElement: HTMLElement): void {
             this.textArea = <HTMLTextAreaElement>domElement;
             var that = this;
@@ -103,7 +108,7 @@ module GhostText.InputArea {
             };
             window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-            this.customEvent = <Event>StandardsCustomEvent.get('input',  { detail: { generatedByGhostText: true} });
+            this.customEvent = <Event>StandardsCustomEvent.get(this.browser, 'input',  { detail: { generatedByGhostText: true} });
         }
 
         public unbind(): void {
@@ -174,6 +179,10 @@ module GhostText.InputArea {
                 this.getText(),
                 this.getSelections().getAll()
             );
+        }
+
+        public setBrowser(browser: Browser): void {
+            this.browser = browser;
         }
 
         /**

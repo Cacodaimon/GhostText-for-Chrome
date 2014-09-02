@@ -53,6 +53,11 @@ module GhostText.InputArea {
          */
         private beforeUnloadListener: EventListener = null;
 
+        /**
+         * The plugin's browser.
+         */
+        private browser: Browser;
+
         public bind(domElement: HTMLElement): void {
             this.contentEditableElement = <HTMLDivElement>domElement;
             var that = this;
@@ -72,7 +77,12 @@ module GhostText.InputArea {
                     that.textChangedEventCB(that, that.getText());
                 }
             };
+
             this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
+
+            if (this.browser === Browser.Firefox) {
+                this.contentEditableElement.addEventListener('DOMCharacterDataModified', this.inputEventListener, false);
+            }
 
             this.beforeUnloadListener = function () {
                 if (that.unloadEventCB) {
@@ -85,6 +95,11 @@ module GhostText.InputArea {
         public unbind(): void {
             this.contentEditableElement.removeEventListener('focus', this.focusEventListener);
             this.contentEditableElement.removeEventListener('input', this.inputEventListener);
+
+            if (this.browser === Browser.Firefox) {
+                this.contentEditableElement.removeEventListener('DOMCharacterDataModified', this.inputEventListener);
+            }
+
             window.removeEventListener('beforeunload', this.beforeUnloadListener);
             this.removeHighlight();
         }
@@ -122,6 +137,10 @@ module GhostText.InputArea {
         }
 
         public setText(text: string): void {
+            if (this.contentEditableElement.innerHTML === text) {
+                return;
+            }
+
             this.contentEditableElement.innerHTML = text;
         }
 
@@ -138,6 +157,10 @@ module GhostText.InputArea {
                 this.getText(),
                 this.getSelections().getAll()
             );
+        }
+
+        public setBrowser(browser: Browser): void {
+            this.browser = browser;
         }
 
         /**

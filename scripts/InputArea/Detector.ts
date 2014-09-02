@@ -16,8 +16,14 @@ module GhostText.InputArea {
          */
         private onFocusCB: (inputArea: IInputArea) => void = null;
 
-        public constructor() {
+        /**
+         * The used browser.
+         */
+        private browser: Browser;
+
+        public constructor(browser: Browser) {
             this.inputAreaElements = [];
+            this.browser = browser;
         }
 
         /**
@@ -68,6 +74,7 @@ module GhostText.InputArea {
 
             for (var i = 0; i < textAreas.length; i++) {
                 var inputArea = new TextArea();
+                inputArea.setBrowser(this.browser);
                 inputArea.bind(<HTMLTextAreaElement>textAreas[i]);
                 this.inputAreaElements.push(inputArea);
             }
@@ -83,6 +90,7 @@ module GhostText.InputArea {
 
             for (var i = 0; i < contentEditables.length; i++) {
                 var inputArea = new ContentEditable();
+                inputArea.setBrowser(this.browser);
                 inputArea.bind(<HTMLDivElement>contentEditables[i]);
                 this.inputAreaElements.push(inputArea);
             }
@@ -105,6 +113,7 @@ module GhostText.InputArea {
                 }
                 this.injectScript(document, this.buildAceScript(id), id);
                 var inputArea = new JSCodeEditor();
+                inputArea.setBrowser(this.browser);
                 inputArea.bind(aceEditor);
                 this.inputAreaElements.push(inputArea);
             }
@@ -127,7 +136,7 @@ module GhostText.InputArea {
                         '}',
                         'return {row: row, col: offset - pos};',
                     '};',
-                    'var ghostTextAceDiv = document.querySelector("#', id,'");',
+                    'var ghostTextAceDiv = document.querySelector("#' + id + '");',
                     'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
                     'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
                     'var Range = ace.require("ace/range").Range;',
@@ -205,6 +214,7 @@ module GhostText.InputArea {
                 }
                 this.injectScript(document, this.buildCodeMirrorScript(id), id);
                 var inputArea = new JSCodeEditor();
+                inputArea.setBrowser(this.browser);
                 inputArea.bind(codeMirrorEditor);
                 this.inputAreaElements.push(inputArea);
             }
@@ -219,7 +229,7 @@ module GhostText.InputArea {
         private buildCodeMirrorScript(id): string {
             return [
                 '(function() {',
-                    'var ghostTextCodeMirrorDiv = document.querySelector("#', id,'");',
+                    'var ghostTextCodeMirrorDiv = document.querySelector("#' + id + '");',
                     'var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;',
 
                     'console.log([ghostTextCodeMirrorDiv, ghostTextCodeMirrorEditor]);',
@@ -330,7 +340,17 @@ module GhostText.InputArea {
             script.setAttribute('type', 'text/javascript');
             script.setAttribute('class', 'ghost-text-injected-script');
             script.setAttribute('id', 'ghost-text-injected-script-' + id);
-            script.innerText = javaScript;
+            switch (this.browser) {
+                case Browser.Chrome:
+                    script.innerText = javaScript;
+                    break;
+                case Browser.Firefox:
+                    script.text = javaScript;
+                    break;
+                default:
+                    throw 'Unknown browser given!';
+            }
+
             head.appendChild(script);
         }
     }
