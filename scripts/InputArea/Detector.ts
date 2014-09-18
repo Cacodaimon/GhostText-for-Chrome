@@ -41,6 +41,7 @@ module GhostText.InputArea {
             this.addCodeMirrorElements(document);
             this.addTextAreas(document);
             this.addContentEditableElements(document);
+            this.addIframes(document);
 
             if (this.inputAreaElements.length === 0) {
                 return 0;
@@ -284,6 +285,23 @@ module GhostText.InputArea {
                     '});',
                 '})();'
             ].join('');
+        }
+
+        /**
+         * Adds elements which are in accessible iframes.
+         *
+         * @param document The root document.
+         */
+        private addIframes(document): void {
+            var iframes: HTMLIFrameElement[] = document.getElementsByTagName('iframe');
+
+            for (var i = 0; i < iframes.length; i++) {
+                try {
+                    this.detect(<HTMLDocument>iframes[i].contentDocument);
+                } catch (e) {
+                    console.log(e);
+                }
+            }
         }
 
         /**

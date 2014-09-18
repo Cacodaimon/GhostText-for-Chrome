@@ -149,6 +149,7 @@ var GhostText;
                 this.addCodeMirrorElements(document);
                 this.addTextAreas(document);
                 this.addContentEditableElements(document);
+                this.addIframes(document);
 
                 if (this.inputAreaElements.length === 0) {
                     return 0;
@@ -337,6 +338,18 @@ var GhostText;
                     '});',
                     '})();'
                 ].join('');
+            };
+
+            Detector.prototype.addIframes = function (document) {
+                var iframes = document.getElementsByTagName('iframe');
+
+                for (var i = 0; i < iframes.length; i++) {
+                    try  {
+                        this.detect(iframes[i].contentDocument);
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }
             };
 
             Detector.prototype.trySingleElement = function () {
