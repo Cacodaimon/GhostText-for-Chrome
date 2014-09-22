@@ -1,17 +1,17 @@
 
 module GhostText.InputArea {
     /**
-     * Implementation for a contenteditable element.
+     * Implementation for a google editable element.
      *
      * @licence The MIT License (MIT)
      * @author Guido Krömer <mail 64 cacodaemon 46 de>
      */
-    export class ContentEditable implements IInputArea {
+    export class GoogleEditable implements IInputArea {
 
         /**
-         * The bind HTML content editable element.
+         * The bind HTML google editable element.
          */
-        private contentEditableElement: HTMLDivElement = null;
+        private googleEditableElement: HTMLBodyElement = null;
 
         /**
          * Callback fired on an input event.
@@ -59,7 +59,8 @@ module GhostText.InputArea {
         private browser: Browser;
 
         public bind(domElement: HTMLElement): void {
-            this.contentEditableElement = <HTMLDivElement>domElement;
+            this.googleEditableElement = <HTMLBodyElement>domElement;
+            console.log(domElement);
             var that = this;
 
 
@@ -70,7 +71,7 @@ module GhostText.InputArea {
 
                 that.highlight();
             };
-            this.contentEditableElement.addEventListener('focus', this.focusEventListener, false);
+            this.googleEditableElement.addEventListener('click', this.focusEventListener, false); // quick and dirty focus fix
 
             this.inputEventListener = function () {
                 if (that.textChangedEventCB) {
@@ -78,11 +79,7 @@ module GhostText.InputArea {
                 }
             };
 
-            this.contentEditableElement.addEventListener('input', this.inputEventListener, false);
-
-            if (this.browser === Browser.Firefox) {
-                this.contentEditableElement.addEventListener('DOMCharacterDataModified', this.inputEventListener, false);
-            }
+            this.googleEditableElement.addEventListener('DOMCharacterDataModified', this.inputEventListener, false);
 
             this.beforeUnloadListener = function () {
                 if (that.unloadEventCB) {
@@ -93,23 +90,19 @@ module GhostText.InputArea {
         }
 
         public unbind(): void {
-            this.contentEditableElement.removeEventListener('focus', this.focusEventListener);
-            this.contentEditableElement.removeEventListener('input', this.inputEventListener);
-
-            if (this.browser === Browser.Firefox) {
-                this.contentEditableElement.removeEventListener('DOMCharacterDataModified', this.inputEventListener);
-            }
+            this.googleEditableElement.removeEventListener('click', this.focusEventListener);
+            this.googleEditableElement.removeEventListener('DOMCharacterDataModified', this.inputEventListener);
 
             window.removeEventListener('beforeunload', this.beforeUnloadListener);
             this.removeHighlight();
         }
 
         public focus(): void {
-            this.contentEditableElement.focus();
+            this.googleEditableElement.focus();
         }
 
         public blur() :void {
-            this.contentEditableElement.blur();
+            this.googleEditableElement.blur();
         }
 
         public textChangedEvent(callback:(inputArea: IInputArea, text: string) => void): void {
@@ -133,15 +126,15 @@ module GhostText.InputArea {
         }
 
         public getText(): string {
-            return this.contentEditableElement.innerHTML;
+            return this.googleEditableElement.innerHTML;
         }
 
         public setText(text: string): void {
-            if (this.contentEditableElement.innerHTML === text) {
+            if (this.googleEditableElement.innerHTML === text) {
                 return;
             }
 
-            this.contentEditableElement.innerHTML = text;
+            this.googleEditableElement.innerHTML = text;
         }
 
         public getSelections(): Selections {
@@ -167,15 +160,15 @@ module GhostText.InputArea {
          * Adds some nice highlight styles.
          */
         private highlight(): void {
-            this.contentEditableElement.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
-            this.contentEditableElement.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
+            this.googleEditableElement.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+            this.googleEditableElement.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
         }
 
         /**
          * Removes the highlight styles.
          */
         private removeHighlight(): void {
-            this.contentEditableElement.style.boxShadow = '';
+            this.googleEditableElement.style.boxShadow = '';
         }
     }
 }

@@ -17,7 +17,8 @@ module.exports = function (grunt) {
             'scripts/InputArea/Detector.ts',
             'scripts/InputArea/TextArea.ts',
             'scripts/InputArea/JSCodeEditor.ts',
-            'scripts/InputArea/ContentEditable.ts'
+            'scripts/InputArea/ContentEditable.ts',
+            'scripts/InputArea/GoogleEditable.ts'
         ],
         dest: 'scripts/input-area.js',
         target: 'ES5',

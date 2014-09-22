@@ -41,6 +41,7 @@ module GhostText.InputArea {
             this.addCodeMirrorElements(document);
             this.addTextAreas(document);
             this.addContentEditableElements(document);
+            this.addGoogleEditableElements(document);
             this.addIframes(document);
 
             if (this.inputAreaElements.length === 0) {
@@ -93,6 +94,24 @@ module GhostText.InputArea {
                 var inputArea = new ContentEditable();
                 inputArea.setBrowser(this.browser);
                 inputArea.bind(<HTMLDivElement>contentEditables[i]);
+                this.inputAreaElements.push(inputArea);
+            }
+        }
+
+        /**
+         * Adds all google editable elements found in the dom.
+         *
+         * @param document The HTML root node.
+         */
+        private addGoogleEditableElements(document: HTMLDocument): void {
+            console.log(document);
+            var googleEditables: NodeList = document.querySelectorAll('[g_editable=\'true\']');
+            console.log(googleEditables);
+
+            for (var i = 0; i < googleEditables.length; i++) {
+                var inputArea = new GoogleEditable();
+                inputArea.setBrowser(this.browser);
+                inputArea.bind(<HTMLDivElement>googleEditables[i]);
                 this.inputAreaElements.push(inputArea);
             }
         }

@@ -149,6 +149,7 @@ var GhostText;
                 this.addCodeMirrorElements(document);
                 this.addTextAreas(document);
                 this.addContentEditableElements(document);
+                this.addGoogleEditableElements(document);
                 this.addIframes(document);
 
                 if (this.inputAreaElements.length === 0) {
@@ -186,6 +187,19 @@ var GhostText;
                     var inputArea = new InputArea.ContentEditable();
                     inputArea.setBrowser(this.browser);
                     inputArea.bind(contentEditables[i]);
+                    this.inputAreaElements.push(inputArea);
+                }
+            };
+
+            Detector.prototype.addGoogleEditableElements = function (document) {
+                console.log(document);
+                var googleEditables = document.querySelectorAll('[g_editable=\'true\']');
+                console.log(googleEditables);
+
+                for (var i = 0; i < googleEditables.length; i++) {
+                    var inputArea = new InputArea.GoogleEditable();
+                    inputArea.setBrowser(this.browser);
+                    inputArea.bind(googleEditables[i]);
                     this.inputAreaElements.push(inputArea);
                 }
             };
@@ -819,6 +833,128 @@ var GhostText;
             return ContentEditable;
         })();
         InputArea.ContentEditable = ContentEditable;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
+        var GoogleEditable = (function () {
+            function GoogleEditable() {
+                this.googleEditableElement = null;
+                this.textChangedEventCB = null;
+                this.selectionChangedEventCB = null;
+                this.removeEventCB = null;
+                this.focusEventCB = null;
+                this.unloadEventCB = null;
+                this.inputEventListener = null;
+                this.focusEventListener = null;
+                this.beforeUnloadListener = null;
+            }
+            GoogleEditable.prototype.bind = function (domElement) {
+                this.googleEditableElement = domElement;
+                console.log(domElement);
+                var that = this;
+
+                this.focusEventListener = function () {
+                    if (that.focusEventCB) {
+                        that.focusEventCB(that);
+                    }
+
+                    that.highlight();
+                };
+                this.googleEditableElement.addEventListener('click', this.focusEventListener, false);
+
+                this.inputEventListener = function () {
+                    if (that.textChangedEventCB) {
+                        that.textChangedEventCB(that, that.getText());
+                    }
+                };
+
+                this.googleEditableElement.addEventListener('DOMCharacterDataModified', this.inputEventListener, false);
+
+                this.beforeUnloadListener = function () {
+                    if (that.unloadEventCB) {
+                        that.unloadEventCB(that);
+                    }
+                };
+                window.addEventListener('beforeunload', this.beforeUnloadListener);
+            };
+
+            GoogleEditable.prototype.unbind = function () {
+                this.googleEditableElement.removeEventListener('click', this.focusEventListener);
+                this.googleEditableElement.removeEventListener('DOMCharacterDataModified', this.inputEventListener);
+
+                window.removeEventListener('beforeunload', this.beforeUnloadListener);
+                this.removeHighlight();
+            };
+
+            GoogleEditable.prototype.focus = function () {
+                this.googleEditableElement.focus();
+            };
+
+            GoogleEditable.prototype.blur = function () {
+                this.googleEditableElement.blur();
+            };
+
+            GoogleEditable.prototype.textChangedEvent = function (callback) {
+                this.textChangedEventCB = callback;
+            };
+
+            GoogleEditable.prototype.selectionChangedEvent = function (callback) {
+                this.selectionChangedEventCB = callback;
+            };
+
+            GoogleEditable.prototype.removeEvent = function (callback) {
+                this.removeEventCB = callback;
+            };
+
+            GoogleEditable.prototype.focusEvent = function (callback) {
+                this.focusEventCB = callback;
+            };
+
+            GoogleEditable.prototype.unloadEvent = function (callback) {
+                this.unloadEventCB = callback;
+            };
+
+            GoogleEditable.prototype.getText = function () {
+                return this.googleEditableElement.innerHTML;
+            };
+
+            GoogleEditable.prototype.setText = function (text) {
+                if (this.googleEditableElement.innerHTML === text) {
+                    return;
+                }
+
+                this.googleEditableElement.innerHTML = text;
+            };
+
+            GoogleEditable.prototype.getSelections = function () {
+                return new InputArea.Selections([]);
+            };
+
+            GoogleEditable.prototype.setSelections = function (selections) {
+            };
+
+            GoogleEditable.prototype.buildChange = function () {
+                return new InputArea.TextChange(this.getText(), this.getSelections().getAll());
+            };
+
+            GoogleEditable.prototype.setBrowser = function (browser) {
+                this.browser = browser;
+            };
+
+            GoogleEditable.prototype.highlight = function () {
+                this.googleEditableElement.style.transition = 'box-shadow 1s cubic-bezier(.25,2,.5,1)';
+                this.googleEditableElement.style.boxShadow = 'rgb(0,173,238) 0 0 20px 5px inset';
+            };
+
+            GoogleEditable.prototype.removeHighlight = function () {
+                this.googleEditableElement.style.boxShadow = '';
+            };
+            return GoogleEditable;
+        })();
+        InputArea.GoogleEditable = GoogleEditable;
     })(GhostText.InputArea || (GhostText.InputArea = {}));
     var InputArea = GhostText.InputArea;
 })(GhostText || (GhostText = {}));
