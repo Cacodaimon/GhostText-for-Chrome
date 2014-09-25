@@ -57,6 +57,9 @@ var GhostTextContent = {
             case 'notify':
                 switch(request.type) {
                     case 'error':
+                        if (GhostTextContent.currentInputArea !== null) {
+                            GhostTextContent.currentInputArea.unbind();
+                        }
                         GhostTextContent.alertUser(request.message, request.stay);
                         break;
                     default: /*we might support more types eventually, like success! */
