@@ -6,7 +6,8 @@ Use your text editor to write in Google Chrome (only Sublime Text for now)
 ## Complementary repos
 
 * [GhostText for Sublime Text](https://github.com/Cacodaimon/GhostText-for-SublimeText) (more info about the project included)
-* [GhostText for Firefox](https://github.com/Cacodaimon/GhostText-for-Firefox) (prototype)
+* [GhostText for Firefox](https://github.com/Cacodaimon/GhostText-for-Firefox)
+* [GhostText for Atom](https://github.com/Cacodaimon/GhostText-for-Atom) (prototype)
 
 
 ## Installation of the development version
