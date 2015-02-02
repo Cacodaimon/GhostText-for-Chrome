@@ -104,9 +104,7 @@ module GhostText.InputArea {
          * @param document The HTML root node.
          */
         private addGoogleEditableElements(document: HTMLDocument): void {
-            console.log(document);
             var googleEditables: NodeList = document.querySelectorAll('[g_editable=\'true\']');
-            console.log(googleEditables);
 
             for (var i = 0; i < googleEditables.length; i++) {
                 var inputArea = new GoogleEditable();
@@ -131,90 +129,12 @@ module GhostText.InputArea {
                     id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                     aceEditor.setAttribute('id', id);
                 }
-                this.injectScript(document, this.buildAceScript(id), id);
-                var inputArea = new JSCodeEditor();
+                var inputArea = new AceCodeEditor();
                 inputArea.setBrowser(this.browser);
                 inputArea.bind(aceEditor);
+                this.injectScript(document, inputArea.getScript(), id);
                 this.inputAreaElements.push(inputArea);
             }
-        }
-
-        /**
-         * Builds the script injected into the page.
-         *
-         * @param id The ace editors id.
-         * @return {string} The script to inject.
-         * @see https://groups.google.com/forum/#!topic/ace-discuss/-RVHHWZGkk8
-         */
-        private buildAceScript(id): string {
-            return [
-                '(function() {',
-                    'var offsetToPos = function(lines, offset) {',
-                        'var row = 0, pos = 0;',
-                        'while ( row < lines.length && pos + lines[row].length < offset) {',
-                            'pos += lines[row].length + 1; row++;',
-                        '}',
-                        'return {row: row, col: offset - pos};',
-                    '};',
-                    'var ghostTextAceDiv = document.querySelector("#' + id + '");',
-                    'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
-                    'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
-                    'var Range = ace.require("ace/range").Range;',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
-                        'ghostTextAceEditorSession.setValue(e.detail.text);',
-                    '});',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                        'ghostTextAceEditor.focus();',
-                    '});',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextDoBlur", function(e) {',
-                        'ghostTextAceEditor.blur();',
-                    '});',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
-                        'ghostTextAceEditorSession.selection.clearSelection();',
-                        'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
-                        'for (var i = 0; i < e.detail.selections.length; i++) {',
-                            'var selection = e.detail.selections[i];',
-                            'var start = offsetToPos(lines, selection.start);',
-                            'var end = offsetToPos(lines, selection.end);',
-                            'var range = new Range(start.row, start.col, end.row, end.col);',
-                            'if (i === 0) {',
-                                'ghostTextAceEditorSession.selection.addRange(range, true);',
-                            '} else {',
-                                'ghostTextAceEditorSession.selection.setSelectionRange(range, true);',
-                            '}',
-                        '}',
-                    '});',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
-                        'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
-                        'ghostTextAceScrollerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
-                        'ghostTextAceScrollerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
-                    '});',
-
-                    'ghostTextAceDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
-                        'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
-                        'ghostTextAceScrollerDiv.style.boxShadow = "";',
-                    '});',
-
-                    'ghostTextAceEditorSession.on("change", function(e) {',
-                        'window.setTimeout(function () {', //ace fires the text change even before all content has been processed so getValue can contain only a part of the actually setted text
-                            'var value = ghostTextAceEditorSession.getValue();',
-                            'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                            'ghostTextAceDiv.dispatchEvent(inputEvent);',
-                        '}, 100);',
-                    '});',
-
-                    'ghostTextAceEditor.on("focus", function(e) {',
-                        'var value = ghostTextAceEditorSession.getValue();',
-                        'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                        'ghostTextAceDiv.dispatchEvent(focusEvent);',
-                    '});',
-                '})();'
-            ].join('\n');
         }
 
         /**
@@ -232,78 +152,12 @@ module GhostText.InputArea {
                     id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                     codeMirrorEditor.setAttribute('id', id);
                 }
-                this.injectScript(document, this.buildCodeMirrorScript(id), id);
-                var inputArea = new JSCodeEditor();
+                var inputArea = new CodeMirror();
                 inputArea.setBrowser(this.browser);
                 inputArea.bind(codeMirrorEditor);
+                this.injectScript(document, inputArea.getScript(), id);
                 this.inputAreaElements.push(inputArea);
             }
-        }
-
-        /**
-         * Builds the script injected into the page.
-         *
-         * @param id The ace editors id.
-         * @return {string} The script to inject.
-         */
-        private buildCodeMirrorScript(id): string {
-            return [
-                '(function() {',
-                    'var ghostTextCodeMirrorDiv = document.querySelector("#' + id + '");',
-                    'var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;',
-
-                    'console.log([ghostTextCodeMirrorDiv, ghostTextCodeMirrorEditor]);',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerInput", function (e) {',
-                        'ghostTextCodeMirrorEditor.doc.setValue(e.detail.text);',
-                    '});',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                        'ghostTextCodeMirrorEditor.focus();',
-                    '});',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoBlur", function(e) {',
-                        'ghostTextCodeMirrorEditor.blur();',
-                    '});',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
-                        'for (var i = 0; i < e.detail.selections.length; i++) {',
-                            'var selection = e.detail.selections[i];',
-                            'var start = ghostTextCodeMirrorEditor.posFromIndex(selection.start);',
-                            'var end = ghostTextCodeMirrorEditor.posFromIndex(selection.end);',
-                            'console.log([start, end]);',
-                            'if (i === 0) {',
-                                'ghostTextCodeMirrorEditor.doc.setSelection(start, end)',
-                            '} else {',
-                                'ghostTextCodeMirrorEditor.doc.addSelection(start, end)',
-                            '}',
-                        '}',
-                    '});',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoHighlight", function(e) {',
-                        'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
-                        'ghostTextCodeMirrorSizerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
-                        'ghostTextCodeMirrorSizerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
-                    '});',
-
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
-                        'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
-                        'ghostTextCodeMirrorSizerDiv.style.boxShadow = "";',
-                    '});',
-
-                    'ghostTextCodeMirrorEditor.on("change", function(e) {',
-                         'var value = e.doc.getValue();',
-                         'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                         'ghostTextCodeMirrorDiv.dispatchEvent(inputEvent);',
-                    '});',
-
-                    'ghostTextCodeMirrorEditor.on("focus", function(e) {',
-                        'var value = e.doc.getValue();',
-                        'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                        'ghostTextCodeMirrorDiv.dispatchEvent(focusEvent);',
-                    '});',
-                '})();'
-            ].join('');
         }
 
         /**
@@ -342,7 +196,7 @@ module GhostText.InputArea {
         }
 
         /**
-         * Binds the onFocus callback on all found elements and wits for the first focus.
+         * Binds the onFocus callback on all found elements and waits for the first focus.
          */
         private tryMultipleElements(): void {
             var that = this;
@@ -367,7 +221,7 @@ module GhostText.InputArea {
          * @param javaScript The script to inject as string.
          * @param id The script tag's id.
          */
-        private injectScript(document: HTMLDocument, javaScript: string, id: string): void {
+        private injectScript(document: HTMLDocument, javaScript: Function, id: string): void {
             if (document.getElementById('ghost-text-injected-script-' + id) !== null) {
                 return;
             }
@@ -379,10 +233,10 @@ module GhostText.InputArea {
             script.setAttribute('id', 'ghost-text-injected-script-' + id);
             switch (this.browser) {
                 case Browser.Chrome:
-                    script.innerText = javaScript;
+                    script.innerText = "(" + javaScript.toString() + ")('" + id + "')";
                     break;
                 case Browser.Firefox:
-                    script.text = javaScript;
+                    script.text = "(" + javaScript.toString() + ")('" + id + "')";
                     break;
                 default:
                     throw 'Unknown browser given!';

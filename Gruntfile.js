@@ -14,9 +14,12 @@ module.exports = function (grunt) {
             'scripts/InputArea/Selections.ts',
             'scripts/InputArea/TextChange.ts',
             'scripts/InputArea/IInputArea.ts',
+            'scripts/InputArea/IScriptToInject.ts',
             'scripts/InputArea/Detector.ts',
             'scripts/InputArea/TextArea.ts',
             'scripts/InputArea/JSCodeEditor.ts',
+            'scripts/InputArea/AceCodeEditor.ts',
+            'scripts/InputArea/CodeMirror.ts',
             'scripts/InputArea/ContentEditable.ts',
             'scripts/InputArea/GoogleEditable.ts'
         ],

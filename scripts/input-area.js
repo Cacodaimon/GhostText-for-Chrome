@@ -192,9 +192,7 @@ var GhostText;
             };
 
             Detector.prototype.addGoogleEditableElements = function (document) {
-                console.log(document);
                 var googleEditables = document.querySelectorAll('[g_editable=\'true\']');
-                console.log(googleEditables);
 
                 for (var i = 0; i < googleEditables.length; i++) {
                     var inputArea = new InputArea.GoogleEditable();
@@ -214,75 +212,12 @@ var GhostText;
                         id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                         aceEditor.setAttribute('id', id);
                     }
-                    this.injectScript(document, this.buildAceScript(id), id);
-                    var inputArea = new InputArea.JSCodeEditor();
+                    var inputArea = new InputArea.AceCodeEditor();
                     inputArea.setBrowser(this.browser);
                     inputArea.bind(aceEditor);
+                    this.injectScript(document, inputArea.getScript(), id);
                     this.inputAreaElements.push(inputArea);
                 }
-            };
-
-            Detector.prototype.buildAceScript = function (id) {
-                return [
-                    '(function() {',
-                    'var offsetToPos = function(lines, offset) {',
-                    'var row = 0, pos = 0;',
-                    'while ( row < lines.length && pos + lines[row].length < offset) {',
-                    'pos += lines[row].length + 1; row++;',
-                    '}',
-                    'return {row: row, col: offset - pos};',
-                    '};',
-                    'var ghostTextAceDiv = document.querySelector("#' + id + '");',
-                    'var ghostTextAceEditor = ace.edit(ghostTextAceDiv);',
-                    'var ghostTextAceEditorSession = ghostTextAceEditor.getSession();',
-                    'var Range = ace.require("ace/range").Range;',
-                    'ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {',
-                    'ghostTextAceEditorSession.setValue(e.detail.text);',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                    'ghostTextAceEditor.focus();',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextDoBlur", function(e) {',
-                    'ghostTextAceEditor.blur();',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
-                    'ghostTextAceEditorSession.selection.clearSelection();',
-                    'var lines = ghostTextAceEditorSession.getDocument().getAllLines();',
-                    'for (var i = 0; i < e.detail.selections.length; i++) {',
-                    'var selection = e.detail.selections[i];',
-                    'var start = offsetToPos(lines, selection.start);',
-                    'var end = offsetToPos(lines, selection.end);',
-                    'var range = new Range(start.row, start.col, end.row, end.col);',
-                    'if (i === 0) {',
-                    'ghostTextAceEditorSession.selection.addRange(range, true);',
-                    '} else {',
-                    'ghostTextAceEditorSession.selection.setSelectionRange(range, true);',
-                    '}',
-                    '}',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function(e) {',
-                    'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
-                    'ghostTextAceScrollerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
-                    'ghostTextAceScrollerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
-                    '});',
-                    'ghostTextAceDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
-                    'var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");',
-                    'ghostTextAceScrollerDiv.style.boxShadow = "";',
-                    '});',
-                    'ghostTextAceEditorSession.on("change", function(e) {',
-                    'window.setTimeout(function () {',
-                    'var value = ghostTextAceEditorSession.getValue();',
-                    'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                    'ghostTextAceDiv.dispatchEvent(inputEvent);',
-                    '}, 100);',
-                    '});',
-                    'ghostTextAceEditor.on("focus", function(e) {',
-                    'var value = ghostTextAceEditorSession.getValue();',
-                    'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                    'ghostTextAceDiv.dispatchEvent(focusEvent);',
-                    '});',
-                    '})();'
-                ].join('\n');
             };
 
             Detector.prototype.addCodeMirrorElements = function (document) {
@@ -295,63 +230,12 @@ var GhostText;
                         id = 'generated-by-ghost-text-' + (Math.random() * 1e17);
                         codeMirrorEditor.setAttribute('id', id);
                     }
-                    this.injectScript(document, this.buildCodeMirrorScript(id), id);
-                    var inputArea = new InputArea.JSCodeEditor();
+                    var inputArea = new InputArea.CodeMirror();
                     inputArea.setBrowser(this.browser);
                     inputArea.bind(codeMirrorEditor);
+                    this.injectScript(document, inputArea.getScript(), id);
                     this.inputAreaElements.push(inputArea);
                 }
-            };
-
-            Detector.prototype.buildCodeMirrorScript = function (id) {
-                return [
-                    '(function() {',
-                    'var ghostTextCodeMirrorDiv = document.querySelector("#' + id + '");',
-                    'var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;',
-                    'console.log([ghostTextCodeMirrorDiv, ghostTextCodeMirrorEditor]);',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerInput", function (e) {',
-                    'ghostTextCodeMirrorEditor.doc.setValue(e.detail.text);',
-                    '});',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoFocus", function(e) {',
-                    'ghostTextCodeMirrorEditor.focus();',
-                    '});',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoBlur", function(e) {',
-                    'ghostTextCodeMirrorEditor.blur();',
-                    '});',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextServerSelectionChanged", function(e) {',
-                    'for (var i = 0; i < e.detail.selections.length; i++) {',
-                    'var selection = e.detail.selections[i];',
-                    'var start = ghostTextCodeMirrorEditor.posFromIndex(selection.start);',
-                    'var end = ghostTextCodeMirrorEditor.posFromIndex(selection.end);',
-                    'console.log([start, end]);',
-                    'if (i === 0) {',
-                    'ghostTextCodeMirrorEditor.doc.setSelection(start, end)',
-                    '} else {',
-                    'ghostTextCodeMirrorEditor.doc.addSelection(start, end)',
-                    '}',
-                    '}',
-                    '});',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextDoHighlight", function(e) {',
-                    'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
-                    'ghostTextCodeMirrorSizerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";',
-                    'ghostTextCodeMirrorSizerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";',
-                    '});',
-                    'ghostTextCodeMirrorDiv.addEventListener("GhostTextRemoveHighlight", function(e) {',
-                    'var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");',
-                    'ghostTextCodeMirrorSizerDiv.style.boxShadow = "";',
-                    '});',
-                    'ghostTextCodeMirrorEditor.on("change", function(e) {',
-                    'var value = e.doc.getValue();',
-                    'var inputEvent = new CustomEvent("GhostTextJSCodeEditorInput", {detail: {text: value}});',
-                    'ghostTextCodeMirrorDiv.dispatchEvent(inputEvent);',
-                    '});',
-                    'ghostTextCodeMirrorEditor.on("focus", function(e) {',
-                    'var value = e.doc.getValue();',
-                    'var focusEvent = new CustomEvent("GhostTextJSCodeEditorFocus", {detail: {text: value}});',
-                    'ghostTextCodeMirrorDiv.dispatchEvent(focusEvent);',
-                    '});',
-                    '})();'
-                ].join('');
             };
 
             Detector.prototype.addIframes = function (document) {
@@ -408,10 +292,10 @@ var GhostText;
                 script.setAttribute('id', 'ghost-text-injected-script-' + id);
                 switch (this.browser) {
                     case 0 /* Chrome */:
-                        script.innerText = javaScript;
+                        script.innerText = "(" + javaScript.toString() + ")('" + id + "')";
                         break;
                     case 1 /* Firefox */:
-                        script.text = javaScript;
+                        script.text = "(" + javaScript.toString() + ")('" + id + "')";
                         break;
                     default:
                         throw 'Unknown browser given!';
@@ -704,6 +588,170 @@ var GhostText;
             return JSCodeEditor;
         })();
         InputArea.JSCodeEditor = JSCodeEditor;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
+        var AceCodeEditor = (function (_super) {
+            __extends(AceCodeEditor, _super);
+            function AceCodeEditor() {
+                _super.apply(this, arguments);
+            }
+            AceCodeEditor.prototype.getScript = function () {
+                return function (id) {
+                    console.log("injected" + id);
+                    var offsetToPos = function (lines, offset) {
+                        var row = 0, pos = 0;
+                        while (row < lines.length && pos + lines[row].length < offset) {
+                            pos += lines[row].length + 1;
+                            row++;
+                        }
+                        return { row: row, col: offset - pos };
+                    };
+                    var ghostTextAceDiv = document.querySelector("#" + id);
+                    console.log(ghostTextAceDiv);
+                    var ghostTextAceEditor = ace.edit(ghostTextAceDiv);
+                    var ghostTextAceEditorSession = ghostTextAceEditor.getSession();
+                    var Range = ace.require("ace/range").Range;
+
+                    ghostTextAceDiv.addEventListener("GhostTextServerInput", function (e) {
+                        ghostTextAceEditorSession.setValue(e.detail.text);
+                    });
+
+                    ghostTextAceDiv.addEventListener("GhostTextDoFocus", function () {
+                        ghostTextAceEditor.focus();
+                    });
+
+                    ghostTextAceDiv.addEventListener("GhostTextDoBlur", function () {
+                        ghostTextAceEditor.blur();
+                    });
+
+                    ghostTextAceDiv.addEventListener("GhostTextServerSelectionChanged", function (e) {
+                        ghostTextAceEditorSession.selection.clearSelection();
+                        var lines = ghostTextAceEditorSession.getDocument().getAllLines();
+                        for (var i = 0; i < e.detail.selections.length; i++) {
+                            var selection = e.detail.selections[i];
+                            var start = offsetToPos(lines, selection.start);
+                            var end = offsetToPos(lines, selection.end);
+                            var range = new Range(start.row, start.col, end.row, end.col);
+                            if (i === 0) {
+                                ghostTextAceEditorSession.selection.addRange(range, true);
+                            } else {
+                                ghostTextAceEditorSession.selection.setSelectionRange(range, true);
+                            }
+                        }
+                    });
+
+                    ghostTextAceDiv.addEventListener("GhostTextDoHighlight", function () {
+                        var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");
+                        ghostTextAceScrollerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";
+                        ghostTextAceScrollerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";
+                    });
+
+                    ghostTextAceDiv.addEventListener("GhostTextRemoveHighlight", function () {
+                        var ghostTextAceScrollerDiv = ghostTextAceDiv.querySelector(".ace_scroller");
+                        ghostTextAceScrollerDiv.style.boxShadow = "";
+                    });
+
+                    ghostTextAceEditorSession.on("change", function (e) {
+                        window.setTimeout(function () {
+                            var value = ghostTextAceEditorSession.getValue();
+                            var customEvent = CustomEvent;
+                            var inputEvent = new customEvent("GhostTextJSCodeEditorInput", { detail: { text: value } });
+                            ghostTextAceDiv.dispatchEvent(inputEvent);
+                        }, 100);
+                    });
+
+                    ghostTextAceEditor.on("focus", function (e) {
+                        var value = ghostTextAceEditorSession.getValue();
+                        var customEvent = CustomEvent;
+                        var focusEvent = new customEvent("GhostTextJSCodeEditorFocus", { detail: { text: value } });
+                        ghostTextAceDiv.dispatchEvent(focusEvent);
+                    });
+                };
+            };
+            return AceCodeEditor;
+        })(InputArea.JSCodeEditor);
+        InputArea.AceCodeEditor = AceCodeEditor;
+    })(GhostText.InputArea || (GhostText.InputArea = {}));
+    var InputArea = GhostText.InputArea;
+})(GhostText || (GhostText = {}));
+var GhostText;
+(function (GhostText) {
+    (function (InputArea) {
+        var CodeMirror = (function (_super) {
+            __extends(CodeMirror, _super);
+            function CodeMirror() {
+                _super.apply(this, arguments);
+            }
+            CodeMirror.prototype.getScript = function () {
+                return function (id) {
+                    console.log(id);
+                    var ghostTextCodeMirrorDiv = document.querySelector("#" + id);
+                    var ghostTextCodeMirrorEditor = ghostTextCodeMirrorDiv.CodeMirror;
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextServerInput", function (e) {
+                        ghostTextCodeMirrorEditor.doc.setValue(e.detail.text);
+                    });
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextDoFocus", function () {
+                        ghostTextCodeMirrorEditor.focus();
+                    });
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextDoBlur", function () {
+                        ghostTextCodeMirrorEditor.blur();
+                    });
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextServerSelectionChanged", function (e) {
+                        for (var i = 0; i < e.detail.selections.length; i++) {
+                            var selection = e.detail.selections[i];
+                            var start = ghostTextCodeMirrorEditor.posFromIndex(selection.start);
+                            var end = ghostTextCodeMirrorEditor.posFromIndex(selection.end);
+                            if (i === 0) {
+                                ghostTextCodeMirrorEditor.doc.setSelection(start, end);
+                            } else {
+                                ghostTextCodeMirrorEditor.doc.addSelection(start, end);
+                            }
+                        }
+                    });
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextDoHighlight", function () {
+                        var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");
+                        ghostTextCodeMirrorSizerDiv.style.transition = "box-shadow 1s cubic-bezier(.25,2,.5,1)";
+                        ghostTextCodeMirrorSizerDiv.style.boxShadow = "rgb(0,173,238) 0 0 20px 5px inset";
+                    });
+
+                    ghostTextCodeMirrorDiv.addEventListener("GhostTextRemoveHighlight", function () {
+                        var ghostTextCodeMirrorSizerDiv = ghostTextCodeMirrorDiv.querySelector(".CodeMirror-sizer");
+                        ghostTextCodeMirrorSizerDiv.style.boxShadow = "";
+                    });
+
+                    ghostTextCodeMirrorEditor.on("change", function (e) {
+                        var value = e.doc.getValue();
+                        var customEvent = CustomEvent;
+                        var inputEvent = new customEvent("GhostTextJSCodeEditorInput", { detail: { text: value } });
+                        ghostTextCodeMirrorDiv.dispatchEvent(inputEvent);
+                    });
+
+                    ghostTextCodeMirrorEditor.on("focus", function (e) {
+                        var value = e.doc.getValue();
+                        var customEvent = CustomEvent;
+                        var focusEvent = new customEvent("GhostTextJSCodeEditorFocus", { detail: { text: value } });
+                        ghostTextCodeMirrorDiv.dispatchEvent(focusEvent);
+                    });
+                };
+            };
+            return CodeMirror;
+        })(InputArea.JSCodeEditor);
+        InputArea.CodeMirror = CodeMirror;
     })(GhostText.InputArea || (GhostText.InputArea = {}));
     var InputArea = GhostText.InputArea;
 })(GhostText || (GhostText = {}));
