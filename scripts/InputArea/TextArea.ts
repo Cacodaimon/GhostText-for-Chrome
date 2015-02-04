@@ -41,7 +41,12 @@ module GhostText.InputArea {
         /**
          * Custom event fired on text change.
          */
-        private customEvent: Event = null;
+        private customEventInput: Event = null;
+
+        /**
+         * Custom event fired on text change.
+         */
+        private customKeyUpEvent: Event = null;
 
         /**
          * Custom event fired on text change.
@@ -108,7 +113,23 @@ module GhostText.InputArea {
             };
             window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-            this.customEvent = <Event>StandardsCustomEvent.get(this.browser, 'input',  { detail: { generatedByGhostText: true} });
+            this.customEventInput = <Event>StandardsCustomEvent.get(this.browser, 'input',  { detail: { generatedByGhostText: true} });
+            this.customKeyUpEvent = this.createKeyboardEvent();
+        }
+
+        /**
+         * Creates a new keyboard event.
+         *
+         * @param type The event type, possible types are: 'keydown', 'keyup', 'keypress'.
+         * @link http://stackoverflow.com/questions/596481/simulate-javascript-key-events#answer-12187302
+         */
+        private createKeyboardEvent (type: string = 'keyup') {
+            var keyboardEvent: Event = document.createEvent('KeyboardEvent');
+            var initMethod: string = typeof (<any>keyboardEvent).initKeyboardEvent !== 'undefined' ? 'initKeyboardEvent' : 'initKeyEvent';
+
+            keyboardEvent[initMethod](type, true, true, window, false, false, false, false, 40, 0);
+
+            return keyboardEvent;
         }
 
         public unbind(): void {
@@ -158,7 +179,8 @@ module GhostText.InputArea {
         public setText(text: string): void {
             this.textArea.value = text;
 
-            this.textArea.dispatchEvent(this.customEvent);
+            this.textArea.dispatchEvent(this.customEventInput);
+            this.textArea.dispatchEvent(this.customKeyUpEvent);
         }
 
         public getSelections(): Selections {

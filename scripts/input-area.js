@@ -320,7 +320,8 @@ var GhostText;
                 this.removeEventCB = null;
                 this.focusEventCB = null;
                 this.unloadEventCB = null;
-                this.customEvent = null;
+                this.customEventInput = null;
+                this.customEventKeyPress = null;
                 this.inputEventListener = null;
                 this.focusEventListener = null;
                 this.beforeUnloadListener = null;
@@ -364,7 +365,12 @@ var GhostText;
                 };
                 window.addEventListener('beforeunload', this.beforeUnloadListener);
 
-                this.customEvent = InputArea.StandardsCustomEvent.get(this.browser, 'input', { detail: { generatedByGhostText: true } });
+                this.customEventInput = InputArea.StandardsCustomEvent.get(this.browser, 'input', { detail: { generatedByGhostText: true } });
+                var keyboardEvent = document.createEvent("KeyboardEvent");
+                var initMethod = typeof keyboardEvent.initKeyboardEvent !== 'undefined' ? "initKeyboardEvent" : "initKeyEvent";
+
+                keyboardEvent[initMethod]("keyup", true, true, window, false, false, false, false, 40, 0);
+                this.customEventKeyPress = keyboardEvent;
             };
 
             TextArea.prototype.unbind = function () {
@@ -414,7 +420,8 @@ var GhostText;
             TextArea.prototype.setText = function (text) {
                 this.textArea.value = text;
 
-                this.textArea.dispatchEvent(this.customEvent);
+                this.textArea.dispatchEvent(this.customEventInput);
+                this.textArea.dispatchEvent(this.customEventKeyPress);
             };
 
             TextArea.prototype.getSelections = function () {
