@@ -1,7 +1,6 @@
 # ![GhostText for Chrome](/promo/gt_banner-for-chrome.png)
-Use your text editor to write in Google Chrome (only Sublime Text for now)
+Use your text editor to write in Google Chrome [![Version published on Chrome Web Store](https://img.shields.io/chrome-web-store/v/godiecgffnchndlihlpaajjcplehddca.svg)](https://chrome.google.com/webstore/detail/sublimetextarea/godiecgffnchndlihlpaajjcplehddca)
 
-[![Video of how it works](http://img.youtube.com/vi/e0aLFPtYPZI/maxresdefault.jpg)](http://youtu.be/e0aLFPtYPZI)
 
 ## Complementary repos
 
